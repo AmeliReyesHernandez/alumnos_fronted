@@ -16,13 +16,13 @@ const carreras = [
 ];
 
 const ladasMexico = [
-  { codigo: '+52', pais: 'México' },
-  { codigo: '+1', pais: 'Estados Unidos / Canadá' },
-  { codigo: '+34', pais: 'España' },
-  { codigo: '+55', pais: 'Brasil' },
-  { codigo: '+39', pais: 'Italia' },
-  { codigo: '+33', pais: 'Francia' },
-  { codigo: '+49', pais: 'Alemania' }
+  { codigo: '+52', pais: 'México', bandera: '🇲🇽' },
+  { codigo: '+1', pais: 'Estados Unidos / Canadá', bandera: '🇺🇸' },
+  { codigo: '+34', pais: 'España', bandera: '🇪🇸' },
+  { codigo: '+55', pais: 'Brasil', bandera: '🇧🇷' },
+  { codigo: '+39', pais: 'Italia', bandera: '🇮🇹' },
+  { codigo: '+33', pais: 'Francia', bandera: '🇫🇷' },
+  { codigo: '+49', pais: 'Alemania', bandera: '🇩🇪' }
 ];
 
 const nuevoAlumno = ref({
@@ -79,6 +79,11 @@ const formatearNumeroControl = (valor) => {
     limpio = '26';
   }
   return limpio.substring(0, 8);
+};
+
+const obtenerBandera = (codigo) => {
+  const lada = ladasMexico.find(l => l.codigo === codigo);
+  return lada ? lada.bandera : '🌍';
 };
 
 const cargarAlumnos = async () => {
@@ -326,6 +331,11 @@ onMounted(cargarAlumnos);
               <div class="col-md-6 mb-3">
                 <label for="telefono" class="form-label">Teléfono</label>
                 <div class="input-group">
+                  <select class="form-select lada-select" id="lada" v-model="nuevoAlumno.lada">
+                    <option v-for="lada in ladasMexico" :key="lada.codigo" :value="lada.codigo">
+                      {{ lada.bandera }} {{ lada.codigo }}
+                    </option>
+                  </select>
                   <input 
                     type="text" 
                     class="form-control" 
@@ -335,11 +345,6 @@ onMounted(cargarAlumnos);
                     placeholder="10 dígitos"
                     maxlength="10"
                     required>
-                  <select class="form-select lada-select" id="lada" v-model="nuevoAlumno.lada">
-                    <option v-for="lada in ladasMexico" :key="lada.codigo" :value="lada.codigo">
-                      {{ lada.codigo }}
-                    </option>
-                  </select>
                 </div>
                 <small v-if="nuevoAlumno.telefono.length > 0 && tieneLetrasTelefono(nuevoAlumno.telefono)" class="text-danger">
                   Este campo solo acepta números
@@ -720,18 +725,33 @@ select.form-control {
 }
 
 .lada-select {
-  border-radius: 0 8px 8px 0 !important;
-  border-left: 1px solid #e2e8f0 !important;
+  border-radius: 8px 0 0 8px !important;
+  border: 2px solid #e2e8f0 !important;
+  border-right: 1px solid #e2e8f0 !important;
   cursor: pointer;
-  max-width: 85px;
+  min-width: 90px;
   padding: 10px 8px;
   font-weight: 500;
+  font-size: 0.95rem;
+  background: white;
+  color: #1e3a8a;
+}
+
+.lada-select:hover {
+  background-color: #f9fafb;
+}
+
+.lada-select:focus {
+  border-color: #3b82f6 !important;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
+  outline: none;
 }
 
 .input-group .form-control {
-  border-radius: 8px 0 0 8px;
-  border-right: none;
+  border-radius: 0 8px 8px 0;
+  border-left: none;
   flex: 1;
+  border: 2px solid #e2e8f0;
 }
 
 .input-group .form-control::placeholder {
@@ -740,14 +760,9 @@ select.form-control {
 
 .input-group .form-control:focus {
   border-color: #3b82f6;
-  border-right: none;
+  border-left: none;
   box-shadow: none;
   z-index: 2;
-}
-
-.lada-select:focus {
-  border-color: #3b82f6 !important;
-  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 /* Estilos para validación */
