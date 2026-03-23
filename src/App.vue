@@ -729,23 +729,14 @@ select.form-control {
   border: 2px solid #e2e8f0 !important;
   border-right: 1px solid #e2e8f0 !important;
   cursor: pointer;
-  min-width: 55px;
-  width: 55px;
-  padding: 6px 4px;
+  min-width: 50px;        
+  width: 50px;            
+  padding: 3px 2px;       
+  height: 36px;
   font-weight: 400;
-  font-size: 0.78rem;
-  background: white;
-  color: #1e3a8a;
-}
-
-.lada-select:hover {
-  background-color: #f9fafb;
-}
-
-.lada-select:focus {
-  border-color: #3b82f6 !important;
-  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
-  outline: none;
+  font-size: 0.75rem;     
+  display: flex;
+  align-items: center;
 }
 
 .input-group .form-control {
@@ -753,6 +744,8 @@ select.form-control {
   border-left: none;
   flex: 1;
   border: 2px solid #e2e8f0;
+  padding: 6px 10px;
+  height: 36px;
 }
 
 .input-group .form-control::placeholder {
@@ -761,9 +754,14 @@ select.form-control {
 
 .input-group .form-control:focus {
   border-color: #3b82f6;
-  border-left: none;
+  border-right: none;
   box-shadow: none;
   z-index: 2;
+}
+
+.lada-select:focus {
+  border-color: #3b82f6 !important;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 /* Estilos para validación */
