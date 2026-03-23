@@ -324,24 +324,24 @@ onMounted(cargarAlumnos);
                 </select>
               </div>
               <div class="col-md-6 mb-3">
-                <label for="lada" class="form-label">Lada (Código de País)</label>
-                <select class="form-control" id="lada" v-model="nuevoAlumno.lada">
-                  <option v-for="lada in ladasMexico" :key="lada.codigo" :value="lada.codigo">
-                    {{ lada.codigo }} - {{ lada.pais }}
-                  </option>
-                </select>
-              </div>
-              <div class="col-md-6 mb-3">
                 <label for="telefono" class="form-label">Teléfono</label>
-                <input 
-                  type="text" 
-                  class="form-control" 
-                  id="telefono" 
-                  v-model="nuevoAlumno.telefono" 
-                  @input="nuevoAlumno.telefono = nuevoAlumno.telefono.replace(/[a-záéíóúñ]/gi, '')"
-                  placeholder="10 dígitos"
-                  maxlength="10"
-                  required>
+                <div class="input-group">
+                  <span class="input-group-text lada-addon">{{ nuevoAlumno.lada }}</span>
+                  <input 
+                    type="text" 
+                    class="form-control" 
+                    id="telefono" 
+                    v-model="nuevoAlumno.telefono" 
+                    @input="nuevoAlumno.telefono = nuevoAlumno.telefono.replace(/[a-záéíóúñ]/gi, '')"
+                    placeholder="10 dígitos"
+                    maxlength="10"
+                    required>
+                  <select class="form-select lada-select" id="lada" v-model="nuevoAlumno.lada" style="max-width: 80px;">
+                    <option v-for="lada in ladasMexico" :key="lada.codigo" :value="lada.codigo">
+                      {{ lada.codigo }}
+                    </option>
+                  </select>
+                </div>
                 <small v-if="nuevoAlumno.telefono.length > 0 && tieneLetrasTelefono(nuevoAlumno.telefono)" class="text-danger">
                   Este campo solo acepta números
                 </small>
@@ -711,6 +711,45 @@ select.form-control {
 .table img:hover {
   border-color: #3b82f6;
   transform: scale(1.1);
+}
+
+/* Input Group con Lada */
+.input-group {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+}
+
+.lada-addon {
+  background-color: #f3f4f6;
+  border: 2px solid #e2e8f0;
+  padding: 10px 12px;
+  font-weight: 600;
+  color: #1e3a8a;
+  min-width: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px 0 0 8px;
+}
+
+.lada-select {
+  border-radius: 0 8px 8px 0 !important;
+  border-left: none !important;
+  max-width: 80px;
+  cursor: pointer;
+}
+
+.input-group .form-control {
+  border-left: none;
+  border-right: none;
+  border-radius: 0;
+  flex: 1;
+}
+
+.input-group .form-control:focus {
+  border-color: #3b82f6;
+  box-shadow: none;
 }
 
 /* Estilos para validación */
