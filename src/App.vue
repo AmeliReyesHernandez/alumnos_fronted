@@ -326,7 +326,6 @@ onMounted(cargarAlumnos);
               <div class="col-md-6 mb-3">
                 <label for="telefono" class="form-label">Teléfono</label>
                 <div class="input-group">
-                  <span class="input-group-text lada-addon">{{ nuevoAlumno.lada }}</span>
                   <input 
                     type="text" 
                     class="form-control" 
@@ -336,7 +335,7 @@ onMounted(cargarAlumnos);
                     placeholder="10 dígitos"
                     maxlength="10"
                     required>
-                  <select class="form-select lada-select" id="lada" v-model="nuevoAlumno.lada" style="max-width: 80px;">
+                  <select class="form-select lada-select" id="lada" v-model="nuevoAlumno.lada">
                     <option v-for="lada in ladasMexico" :key="lada.codigo" :value="lada.codigo">
                       {{ lada.codigo }}
                     </option>
@@ -720,36 +719,35 @@ select.form-control {
   gap: 0;
 }
 
-.lada-addon {
-  background-color: #f3f4f6;
-  border: 2px solid #e2e8f0;
-  padding: 10px 12px;
-  font-weight: 600;
-  color: #1e3a8a;
-  min-width: 60px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 8px 0 0 8px;
-}
-
 .lada-select {
   border-radius: 0 8px 8px 0 !important;
-  border-left: none !important;
-  max-width: 80px;
+  border-left: 1px solid #e2e8f0 !important;
   cursor: pointer;
+  max-width: 85px;
+  padding: 10px 8px;
+  font-weight: 500;
 }
 
 .input-group .form-control {
-  border-left: none;
+  border-radius: 8px 0 0 8px;
   border-right: none;
-  border-radius: 0;
   flex: 1;
+}
+
+.input-group .form-control::placeholder {
+  color: #b0b9c6;
 }
 
 .input-group .form-control:focus {
   border-color: #3b82f6;
+  border-right: none;
   box-shadow: none;
+  z-index: 2;
+}
+
+.lada-select:focus {
+  border-color: #3b82f6 !important;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 /* Estilos para validación */
