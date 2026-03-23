@@ -729,10 +729,10 @@ select.form-control {
   border: 2px solid #e2e8f0 !important;
   border-right: 1px solid #e2e8f0 !important;
   cursor: pointer;
-  min-width: 90px;
-  padding: 10px 8px;
+  min-width: 70px;
+  padding: 8px 6px;
   font-weight: 500;
-  font-size: 0.95rem;
+  font-size: 0.85rem;
   background: white;
   color: #1e3a8a;
 }
