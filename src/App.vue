@@ -37,6 +37,22 @@ const validarNumeroControl = (numeroControl) => {
   return soloNumeros.length === 8;
 };
 
+const validarNombre = (nombre) => {
+  return /^[a-záéíóúñ\s]*$/i.test(nombre);
+};
+
+const validarApellido = (apellido) => {
+  return /^[a-záéíóúñ\s]*$/i.test(apellido);
+};
+
+const tieneLetrasNumeroControl = (numeroControl) => {
+  return /[a-záéíóúñ]/i.test(numeroControl);
+};
+
+const tieneLetrasTelefono = (telefono) => {
+  return /[a-záéíóúñ]/i.test(telefono);
+};
+
 const cargarAlumnos = async () => {
   const response = await axios.get('https://alumnos-backend-psvm.onrender.com/alumnos/traer-alumnos')
   alumnos.value = response.data;
@@ -187,11 +203,23 @@ onMounted(cargarAlumnos);
             <div class="row">
               <div class="col-md-6 mb-3">
                 <label for="nombre" class="form-label">Nombre</label>
-                <input type="text" class="form-control" id="nombre" v-model="nuevoAlumno.nombre" required>
+                <input 
+                  type="text" 
+                  class="form-control" 
+                  id="nombre" 
+                  v-model="nuevoAlumno.nombre" 
+                  @input="nuevoAlumno.nombre = nuevoAlumno.nombre.replace(/[0-9]/g, '')"
+                  required>
               </div>
               <div class="col-md-6 mb-3">
                 <label for="apellido" class="form-label">Apellidos</label>
-                <input type="text" class="form-control" id="apellido" v-model="nuevoAlumno.apellido" required>
+                <input 
+                  type="text" 
+                  class="form-control" 
+                  id="apellido" 
+                  v-model="nuevoAlumno.apellido" 
+                  @input="nuevoAlumno.apellido = nuevoAlumno.apellido.replace(/[0-9]/g, '')"
+                  required>
               </div>
               <div class="col-md-6 mb-3">
                 <label for="email" class="form-label">Email</label>
@@ -204,9 +232,13 @@ onMounted(cargarAlumnos);
                   class="form-control" 
                   id="numeroControl" 
                   v-model="nuevoAlumno.numeroControl"
+                  @input="nuevoAlumno.numeroControl = nuevoAlumno.numeroControl.replace(/[a-záéíóúñ]/gi, '')"
                   placeholder="8 dígitos"
                   maxlength="8">
-                <small v-if="nuevoAlumno.numeroControl.length > 0 && !validarNumeroControl(nuevoAlumno.numeroControl)" class="text-danger">
+                <small v-if="nuevoAlumno.numeroControl.length > 0 && tieneLetrasNumeroControl(nuevoAlumno.numeroControl)" class="text-danger">
+                  Este campo solo acepta números
+                </small>
+                <small v-else-if="nuevoAlumno.numeroControl.length > 0 && !validarNumeroControl(nuevoAlumno.numeroControl)" class="text-danger">
                   Debe tener exactamente 8 dígitos
                 </small>
               </div>
@@ -226,10 +258,14 @@ onMounted(cargarAlumnos);
                   class="form-control" 
                   id="telefono" 
                   v-model="nuevoAlumno.telefono" 
+                  @input="nuevoAlumno.telefono = nuevoAlumno.telefono.replace(/[a-záéíóúñ]/gi, '')"
                   placeholder="10 dígitos"
                   maxlength="10"
                   required>
-                <small v-if="nuevoAlumno.telefono.length > 0 && !validarTelefono(nuevoAlumno.telefono)" class="text-danger">
+                <small v-if="nuevoAlumno.telefono.length > 0 && tieneLetrasTelefono(nuevoAlumno.telefono)" class="text-danger">
+                  Este campo solo acepta números
+                </small>
+                <small v-else-if="nuevoAlumno.telefono.length > 0 && !validarTelefono(nuevoAlumno.telefono)" class="text-danger">
                   Debe tener exactamente 10 dígitos
                 </small>
               </div>
