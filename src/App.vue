@@ -331,9 +331,9 @@ onMounted(cargarAlumnos);
               <div class="col-md-6 mb-3">
                 <label for="telefono" class="form-label">Teléfono</label>
                 <div class="input-group">
-                  <select class="form-select lada-select" id="lada" v-model="nuevoAlumno.lada" title="Seleccionar país">
+                  <select class="form-select lada-select" id="lada" v-model="nuevoAlumno.lada">
                     <option v-for="lada in ladasMexico" :key="lada.codigo" :value="lada.codigo">
-                      {{ lada.bandera }}
+                      {{ lada.bandera }} {{ lada.codigo }}
                     </option>
                   </select>
                   <input 
@@ -729,12 +729,12 @@ select.form-control {
   border: 2px solid #e2e8f0 !important;
   border-right: 1px solid #e2e8f0 !important;
   cursor: pointer;
-  min-width: 35px;        
-  width: 35px;            
-  padding: 2px 1px;       
+  min-width: 60px;        
+  width: 60px;            
+  padding: 4px 3px;       
   height: 36px;
   font-weight: 400;
-  font-size: 0.65rem;     
+  font-size: 0.72rem;     
   display: flex;
   align-items: center;
   justify-content: center;
