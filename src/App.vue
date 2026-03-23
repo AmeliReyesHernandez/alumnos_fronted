@@ -729,12 +729,16 @@ select.form-control {
   border: 2px solid #e2e8f0 !important;
   border-right: 1px solid #e2e8f0 !important;
   cursor: pointer;
-  min-width: 60px;        
-  width: 60px;            
-  padding: 4px 3px;       
+
+  min-width: 25px;   /* menos ancho */
+  width: 25px;       /* menos ancho */
+
+  padding: 6px 3px;
   height: 36px;
+
   font-weight: 400;
-  font-size: 0.72rem;     
+  font-size: 0.72rem;
+
   display: flex;
   align-items: center;
   justify-content: center;
