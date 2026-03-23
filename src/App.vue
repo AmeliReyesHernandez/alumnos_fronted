@@ -391,8 +391,8 @@ onMounted(cargarAlumnos);
                   </tr>
                 </thead>
                 <tbody>
-                <tr v-for="alumno in alumnos" :key="alumno.id">
-                  <td class="col-id">{{ alumno.id }}</td>
+                <tr v-for="(alumno, index) in alumnos" :key="alumno.id">
+  <td class="col-id">{{ index + 1 }}</td>
                   <td class="col-nombre">{{ alumno.nombre }}</td>
                   <td class="col-apellido">{{ alumno.apellidoPaterno }}</td>
                   <td class="col-apellido">{{ alumno.apellidoMaterno }}</td>
@@ -730,8 +730,8 @@ select.form-control {
   border-right: 1px solid #e2e8f0 !important;
   cursor: pointer;
 
-  min-width: 25px;   /* menos ancho */
-  width: 25px;       /* menos ancho */
+  min-width: 25px;  
+  width: 25px;      
 
   padding: 6px 3px;
   height: 36px;
