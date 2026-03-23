@@ -15,12 +15,24 @@ const carreras = [
   'Licenciatura en Arquitectura'
 ];
 
+const ladasMexico = [
+  { codigo: '+52', pais: 'México' },
+  { codigo: '+1', pais: 'Estados Unidos / Canadá' },
+  { codigo: '+34', pais: 'España' },
+  { codigo: '+55', pais: 'Brasil' },
+  { codigo: '+39', pais: 'Italia' },
+  { codigo: '+33', pais: 'Francia' },
+  { codigo: '+49', pais: 'Alemania' }
+];
+
 const nuevoAlumno = ref({
   nombre: '',
-  apellido: '',
+  apellidoPaterno: '',
+  apellidoMaterno: '',
   email: '',
-  numeroControl: '',
+  numeroControl: '26',
   carrera: '',
+  lada: '+52',
   telefono: '',
   imagenURL: ''
 });
@@ -34,7 +46,11 @@ const validarTelefono = (telefono) => {
 
 const validarNumeroControl = (numeroControl) => {
   const soloNumeros = numeroControl.replace(/\D/g, '');
-  return soloNumeros.length === 8;
+  return soloNumeros.length === 8 && soloNumeros.startsWith('26');
+};
+
+const validarQueEmpieceConDiez = (numeroControl) => {
+  return numeroControl.startsWith('26') || numeroControl === '';
 };
 
 const validarNombre = (nombre) => {
@@ -53,6 +69,18 @@ const tieneLetrasTelefono = (telefono) => {
   return /[a-záéíóúñ]/i.test(telefono);
 };
 
+const formatearNumeroControl = (valor) => {
+  // Eliminar letras
+  let limpio = valor.replace(/[a-záéíóúñ]/gi, '').replace(/[^0-9]/g, '');
+  // Asegurar que comienza con 26
+  if (limpio.length > 0 && !limpio.startsWith('26')) {
+    limpio = '26' + limpio.substring(2);
+  } else if (limpio.length === 0) {
+    limpio = '26';
+  }
+  return limpio.substring(0, 8);
+};
+
 const cargarAlumnos = async () => {
   const response = await axios.get('https://alumnos-backend-psvm.onrender.com/alumnos/traer-alumnos')
   alumnos.value = response.data;
@@ -61,11 +89,29 @@ const cargarAlumnos = async () => {
 
 const agregarAlumno = async () => {
   try {
-    if (!validarTelefono(nuevoAlumno.value.telefono)) {
+    if (!nuevoAlumno.value.nombre.trim()) {
       Swal.fire({
         icon: 'error',
-        title: 'Error en Teléfono',
-        text: 'El teléfono debe tener exactamente 10 dígitos'
+        title: 'Error',
+        text: 'El nombre es requerido'
+      });
+      return;
+    }
+
+    if (!nuevoAlumno.value.apellidoPaterno.trim()) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'El apellido paterno es requerido'
+      });
+      return;
+    }
+
+    if (!nuevoAlumno.value.apellidoMaterno.trim()) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'El apellido materno es requerido'
       });
       return;
     }
@@ -74,7 +120,16 @@ const agregarAlumno = async () => {
       Swal.fire({
         icon: 'error',
         title: 'Error en Número de Control',
-        text: 'El número de control debe tener exactamente 8 dígitos'
+        text: 'El número de control debe tener exactamente 8 dígitos y comenzar con 26'
+      });
+      return;
+    }
+
+    if (!validarTelefono(nuevoAlumno.value.telefono)) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error en Teléfono',
+        text: 'El teléfono debe tener exactamente 10 dígitos'
       });
       return;
     }
@@ -119,10 +174,12 @@ const agregarAlumno = async () => {
     await cargarAlumnos();
     nuevoAlumno.value = {
       nombre: '',
-      apellido: '',
+      apellidoPaterno: '',
+      apellidoMaterno: '',
       email: '',
-      numeroControl: '',
+      numeroControl: '26',
       carrera: '',
+      lada: '+52',
       telefono: '',
       imagenURL: ''
     };
@@ -144,10 +201,12 @@ const editarAlumnos = (alumno) => {
 const limpiarFormulario = () => {
   nuevoAlumno.value = {
     nombre: '',
-    apellido: '',
+    apellidoPaterno: '',
+    apellidoMaterno: '',
     email: '',
-    numeroControl: '',
+    numeroControl: '26',
     carrera: '',
+    lada: '+52',
     telefono: '',
     imagenURL: ''
   };
@@ -212,13 +271,23 @@ onMounted(cargarAlumnos);
                   required>
               </div>
               <div class="col-md-6 mb-3">
-                <label for="apellido" class="form-label">Apellidos</label>
+                <label for="apellidoPaterno" class="form-label">Apellido Paterno</label>
                 <input 
                   type="text" 
                   class="form-control" 
-                  id="apellido" 
-                  v-model="nuevoAlumno.apellido" 
-                  @input="nuevoAlumno.apellido = nuevoAlumno.apellido.replace(/[0-9]/g, '')"
+                  id="apellidoPaterno" 
+                  v-model="nuevoAlumno.apellidoPaterno" 
+                  @input="nuevoAlumno.apellidoPaterno = nuevoAlumno.apellidoPaterno.replace(/[0-9]/g, '')"
+                  required>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label for="apellidoMaterno" class="form-label">Apellido Materno</label>
+                <input 
+                  type="text" 
+                  class="form-control" 
+                  id="apellidoMaterno" 
+                  v-model="nuevoAlumno.apellidoMaterno" 
+                  @input="nuevoAlumno.apellidoMaterno = nuevoAlumno.apellidoMaterno.replace(/[0-9]/g, '')"
                   required>
               </div>
               <div class="col-md-6 mb-3">
@@ -232,14 +301,14 @@ onMounted(cargarAlumnos);
                   class="form-control" 
                   id="numeroControl" 
                   v-model="nuevoAlumno.numeroControl"
-                  @input="nuevoAlumno.numeroControl = nuevoAlumno.numeroControl.replace(/[a-záéíóúñ]/gi, '')"
-                  placeholder="8 dígitos"
+                  @input="nuevoAlumno.numeroControl = formatearNumeroControl(nuevoAlumno.numeroControl)"
+                  placeholder="26XXXXXX"
                   maxlength="8">
-                <small v-if="nuevoAlumno.numeroControl.length > 0 && tieneLetrasNumeroControl(nuevoAlumno.numeroControl)" class="text-danger">
-                  Este campo solo acepta números
+                <small v-if="nuevoAlumno.numeroControl.length > 0 && !nuevoAlumno.numeroControl.startsWith('26')" class="text-danger">
+                  Debe comenzar con 26
                 </small>
                 <small v-else-if="nuevoAlumno.numeroControl.length > 0 && !validarNumeroControl(nuevoAlumno.numeroControl)" class="text-danger">
-                  Debe tener exactamente 8 dígitos
+                  Debe tener exactamente 8 dígitos comenzando con 26
                 </small>
               </div>
               <div class="col-md-6 mb-3">
@@ -248,6 +317,14 @@ onMounted(cargarAlumnos);
                   <option value="">-- Selecciona una carrera --</option>
                   <option v-for="carrera in carreras" :key="carrera" :value="carrera">
                     {{ carrera }}
+                  </option>
+                </select>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label for="lada" class="form-label">Lada (Código de País)</label>
+                <select class="form-control" id="lada" v-model="nuevoAlumno.lada">
+                  <option v-for="lada in ladasMexico" :key="lada.codigo" :value="lada.codigo">
+                    {{ lada.codigo }} - {{ lada.pais }}
                   </option>
                 </select>
               </div>
@@ -295,10 +372,12 @@ onMounted(cargarAlumnos);
                   <tr>
                     <th scope="col">ID</th>
                     <th scope="col">Nombre</th>
-                    <th scope="col">Apellidos</th>
+                    <th scope="col">Ap. Paterno</th>
+                    <th scope="col">Ap. Materno</th>
                     <th scope="col">Email</th>
                     <th scope="col">Nº Control</th>
                     <th scope="col">Carrera</th>
+                    <th scope="col">Lada</th>
                     <th scope="col">Teléfono</th>
                     <th scope="col">Imagen</th>
                     <th scope="col">Acciones</th>
@@ -308,10 +387,12 @@ onMounted(cargarAlumnos);
                 <tr v-for="alumno in alumnos" :key="alumno.id">
                   <td>{{ alumno.id }}</td>
                   <td>{{ alumno.nombre }}</td>
-                  <td>{{ alumno.apellido }}</td>
+                  <td>{{ alumno.apellidoPaterno }}</td>
+                  <td>{{ alumno.apellidoMaterno }}</td>
                   <td>{{ alumno.email }}</td>
                   <td>{{ alumno.numeroControl }}</td>
                   <td>{{ alumno.carrera }}</td>
+                  <td>{{ alumno.lada }}</td>
                   <td>{{ alumno.telefono }}</td>
                   <td><img :src="alumno.imagenURL" alt="Imagen de Alumno" width="45" height="45" style="border-radius: 50%; object-fit: cover; border: 2px solid #3b82f6;"></td>
                   <td>
