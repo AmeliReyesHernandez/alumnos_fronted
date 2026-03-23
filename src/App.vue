@@ -38,7 +38,7 @@ const validarNumeroControl = (numeroControl) => {
 };
 
 const cargarAlumnos = async () => {
-  const response = await axios.get('http://localhost:8081/alumnos/traer-alumnos')
+  const response = await axios.get('http://alumnos-backend-psvm.onrender.com/alumnos/traer-alumnos')
   alumnos.value = response.data;
   console.log(alumnos.value);
 }
@@ -82,7 +82,7 @@ const agregarAlumno = async () => {
     }
 
     if (editado.value) {
-      await axios.put(`http://localhost:8081/alumnos/editar-alumnos/${nuevoAlumno.value.id}`, nuevoAlumno.value);
+      await axios.put(`http://alumnos-backend-psvm.onrender.com/alumnos/editar-alumnos/${nuevoAlumno.value.id}`, nuevoAlumno.value);
       Swal.fire({
         icon: 'success',
         title: 'Alumno actualizado correctamente',
@@ -91,7 +91,7 @@ const agregarAlumno = async () => {
       });
       editado.value = false;
     } else {
-      await axios.post('http://localhost:8081/alumnos/insertar-alumnos', nuevoAlumno.value);
+      await axios.post('http://alumnos-backend-psvm.onrender.com/alumnos/insertar-alumnos', nuevoAlumno.value);
       Swal.fire({
         icon: 'success',
         title: 'Alumno agregado correctamente',
@@ -161,7 +161,7 @@ const eliminarAlumno = async (id) => {
 
 const eliminarAlumnoPorId = async (id) => {
   try {
-    await axios.delete(`http://localhost:8081/alumnos/eliminar-alumnos/${id}`);
+    await axios.delete(`http://alumnos-backend-psvm.onrender.com/alumnos/eliminar-alumnos/${id}`);
     console.log('Alumno eliminado con id:', id);
     await cargarAlumnos();
   } catch (errr) {
