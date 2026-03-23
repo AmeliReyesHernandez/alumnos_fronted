@@ -268,6 +268,7 @@ onMounted(cargarAlumnos);
                   id="nombre" 
                   v-model="nuevoAlumno.nombre" 
                   @input="nuevoAlumno.nombre = nuevoAlumno.nombre.replace(/[0-9]/g, '')"
+                  maxlength="20"
                   required>
               </div>
               <div class="col-md-6 mb-3">
@@ -278,6 +279,7 @@ onMounted(cargarAlumnos);
                   id="apellidoPaterno" 
                   v-model="nuevoAlumno.apellidoPaterno" 
                   @input="nuevoAlumno.apellidoPaterno = nuevoAlumno.apellidoPaterno.replace(/[0-9]/g, '')"
+                  maxlength="20"
                   required>
               </div>
               <div class="col-md-6 mb-3">
@@ -288,6 +290,7 @@ onMounted(cargarAlumnos);
                   id="apellidoMaterno" 
                   v-model="nuevoAlumno.apellidoMaterno" 
                   @input="nuevoAlumno.apellidoMaterno = nuevoAlumno.apellidoMaterno.replace(/[0-9]/g, '')"
+                  maxlength="20"
                   required>
               </div>
               <div class="col-md-6 mb-3">
@@ -385,17 +388,17 @@ onMounted(cargarAlumnos);
                 </thead>
                 <tbody>
                 <tr v-for="alumno in alumnos" :key="alumno.id">
-                  <td>{{ alumno.id }}</td>
-                  <td>{{ alumno.nombre }}</td>
-                  <td>{{ alumno.apellidoPaterno }}</td>
-                  <td>{{ alumno.apellidoMaterno }}</td>
-                  <td>{{ alumno.email }}</td>
-                  <td>{{ alumno.numeroControl }}</td>
-                  <td>{{ alumno.carrera }}</td>
-                  <td>{{ alumno.lada }}</td>
-                  <td>{{ alumno.telefono }}</td>
-                  <td><img :src="alumno.imagenURL" alt="Imagen de Alumno" width="45" height="45" style="border-radius: 50%; object-fit: cover; border: 2px solid #3b82f6;"></td>
-                  <td>
+                  <td class="col-id">{{ alumno.id }}</td>
+                  <td class="col-nombre">{{ alumno.nombre }}</td>
+                  <td class="col-apellido">{{ alumno.apellidoPaterno }}</td>
+                  <td class="col-apellido">{{ alumno.apellidoMaterno }}</td>
+                  <td class="col-email">{{ alumno.email }}</td>
+                  <td class="col-numcontrol">{{ alumno.numeroControl }}</td>
+                  <td class="col-carrera">{{ alumno.carrera }}</td>
+                  <td class="col-lada">{{ alumno.lada }}</td>
+                  <td class="col-telefono">{{ alumno.telefono }}</td>
+                  <td class="col-imagen"><img :src="alumno.imagenURL" alt="Imagen de Alumno" width="35" height="35" style="border-radius: 50%; object-fit: cover; border: 2px solid #3b82f6;"></td>
+                  <td class="col-acciones">
                     <div class="btn-group-acciones">
                       <button @click="editarAlumnos(alumno)" class="btn-accion btn-editar" title="Editar">
                         <i class="bi bi-pencil-square"></i>
@@ -556,22 +559,23 @@ select.form-control {
 /* Botones de acciones mejorados */
 .btn-group-acciones {
   display: flex;
-  gap: 8px;
+  gap: 4px;
   align-items: center;
+  justify-content: center;
 }
 
 .btn-accion {
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   border: none;
-  border-radius: 8px;
+  border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  font-size: 1.1rem;
+  font-size: 0.9rem;
   transition: all 0.3s ease;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
 .btn-editar {
@@ -600,27 +604,30 @@ select.form-control {
 .table {
   margin-bottom: 0;
   margin-top: 0;
+  font-size: 0.85rem;
 }
 
 .table-responsive {
   border-radius: 8px;
-  overflow: hidden;
+  overflow: auto;
   margin-top: 5px;
 }
 
 .table-header-bg {
   background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
+  white-space: nowrap;
 }
 
 .table-header-bg th {
   color: #373343;
   font-weight: 500;
-  padding: 12px 12px;
+  padding: 10px 6px;
   border: none;
   text-transform: uppercase;
-  font-size: 0.8rem;
-  letter-spacing: 0.5px;
+  font-size: 0.75rem;
+  letter-spacing: 0.3px;
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  white-space: nowrap;
 }
 
 .table tbody tr {
@@ -634,15 +641,71 @@ select.form-control {
 }
 
 .table td {
-  padding: 15px 12px;
+  padding: 10px 6px;
   vertical-align: middle;
   color: #1f2937;
-  font-size: 0.95rem;
+  font-size: 0.8rem;
+  max-width: 80px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.table td:first-child {
+  max-width: 40px;
+  text-align: center;
 }
 
 .table img {
   border: 2px solid #e2e8f0;
   transition: all 0.3s ease;
+  max-width: 35px;
+}
+
+/* Columnas específicas de la tabla */
+.col-id {
+  max-width: 40px !important;
+  width: 40px;
+}
+
+.col-nombre, .col-apellido {
+  max-width: 70px !important;
+}
+
+.col-email {
+  max-width: 120px !important;
+}
+
+.col-numcontrol {
+  max-width: 65px !important;
+  text-align: center;
+  font-weight: 600;
+}
+
+.col-carrera {
+  max-width: 100px !important;
+}
+
+.col-lada {
+  max-width: 55px !important;
+  text-align: center;
+}
+
+.col-telefono {
+  max-width: 70px !important;
+  text-align: center;
+  font-weight: 500;
+}
+
+.col-imagen {
+  max-width: 50px !important;
+  text-align: center;
+}
+
+.col-acciones {
+  max-width: 80px !important;
+  text-align: center;
+  white-space: normal;
 }
 
 .table img:hover {
@@ -678,11 +741,35 @@ select.form-control {
   }
 
   .table {
-    font-size: 0.85rem;
+    font-size: 0.75rem;
+  }
+
+  .table-header-bg th {
+    font-size: 0.65rem;
+    padding: 8px 4px;
   }
 
   .table td {
-    padding: 10px 8px;
+    padding: 8px 4px;
+    font-size: 0.7rem;
+  }
+
+  .col-nombre, .col-apellido {
+    max-width: 50px !important;
+  }
+
+  .col-email {
+    max-width: 70px !important;
+  }
+
+  .col-carrera {
+    max-width: 60px !important;
+  }
+
+  .btn-accion {
+    width: 28px;
+    height: 28px;
+    font-size: 0.8rem;
   }
 
   .btn {
