@@ -83,7 +83,7 @@ const formatearNumeroControl = (valor) => {
 
 const obtenerBandera = (codigo) => {
   const lada = ladasMexico.find(l => l.codigo === codigo);
-  return lada ? lada.bandera : '🌍';
+  return lada ? lada.bandera : '';
 };
 
 const cargarAlumnos = async () => {
@@ -276,6 +276,30 @@ const alumnosAgrupados = computed(() => {
   return grupos;
 });
 
+const itemsPorPagina = 15;
+const paginaActual = ref({});
+
+const cambiarPagina = (carrera, nuevaPagina) => {
+  paginaActual.value[carrera] = nuevaPagina;
+};
+
+const totalPaginasPorCarrera = (carrera) => {
+  const lista = alumnosAgrupados.value[carrera] || [];
+  return Math.ceil(lista.length / itemsPorPagina);
+};
+
+const alumnosPaginados = computed(() => {
+  const paginados = {};
+  for (const carrera in alumnosAgrupados.value) {
+    const lista = alumnosAgrupados.value[carrera];
+    const pagina = paginaActual.value[carrera] || 1;
+    const inicio = (pagina - 1) * itemsPorPagina;
+    const fin = inicio + itemsPorPagina;
+    paginados[carrera] = lista.slice(inicio, fin);
+  }
+  return paginados;
+});
+
 onMounted(cargarAlumnos);
 </script>
 
@@ -431,8 +455,8 @@ onMounted(cargarAlumnos);
                   </tr>
                 </thead>
                 <tbody>
-                <tr v-for="(alumno, index) in lista" :key="alumno.id">
-                  <td class="col-id text-center fw-bold">{{ index + 1 }}</td>
+                <tr v-for="(alumno, index) in alumnosPaginados[carrera]" :key="alumno.id">
+                  <td class="col-id text-center fw-bold">{{ ((paginaActual[carrera] || 1) - 1) * itemsPorPagina + index + 1 }}</td>
                   <td class="col-nombre">{{ alumno.nombre }}</td>
                   <td class="col-apellido">{{ alumno.apellidoPaterno }}</td>
                   <td class="col-apellido">{{ alumno.apellidoMaterno }}</td>
@@ -455,6 +479,22 @@ onMounted(cargarAlumnos);
                 </tr>
               </tbody>
             </table>
+            </div>
+
+            <div v-if="totalPaginasPorCarrera(carrera) > 1" class="d-flex justify-content-center mt-4">
+              <nav aria-label="Navegación de páginas">
+                <ul class="pagination pagination-sm shadow-sm mb-0">
+                  <li class="page-item" :class="{ disabled: (paginaActual[carrera] || 1) === 1 }">
+                    <button class="page-link" @click="cambiarPagina(carrera, (paginaActual[carrera] || 1) - 1)">Anterior</button>
+                  </li>
+                  <li v-for="pag in totalPaginasPorCarrera(carrera)" :key="pag" class="page-item" :class="{ active: (paginaActual[carrera] || 1) === pag }">
+                    <button class="page-link" @click="cambiarPagina(carrera, pag)">{{ pag }}</button>
+                  </li>
+                  <li class="page-item" :class="{ disabled: (paginaActual[carrera] || 1) === totalPaginasPorCarrera(carrera) }">
+                    <button class="page-link" @click="cambiarPagina(carrera, (paginaActual[carrera] || 1) + 1)">Siguiente</button>
+                  </li>
+                </ul>
+              </nav>
             </div>
           </div>
         </div>
