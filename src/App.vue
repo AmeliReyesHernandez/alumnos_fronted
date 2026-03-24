@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import axios from 'axios';
 import Swal from 'sweetalert2';
 
@@ -254,6 +254,28 @@ const eliminarAlumnoPorId = async (id) => {
   }
 }
 
+const carreraSeleccionada = ref('');
+
+const seleccionarCarrera = (carrera) => {
+  if (carreraSeleccionada.value === carrera) {
+    carreraSeleccionada.value = '';
+  } else {
+    carreraSeleccionada.value = carrera;
+  }
+};
+
+const alumnosAgrupados = computed(() => {
+  const grupos = {};
+  alumnos.value.forEach(alumno => {
+    const carrera = alumno.carrera || 'Sin carrera asignada';
+    if (!grupos[carrera]) {
+      grupos[carrera] = [];
+    }
+    grupos[carrera].push(alumno);
+  });
+  return grupos;
+});
+
 onMounted(cargarAlumnos);
 </script>
 
@@ -369,15 +391,33 @@ onMounted(cargarAlumnos);
         </div>
       </div>
 
+      <div class="col-md-12 mb-2" v-if="Object.keys(alumnosAgrupados).length > 0">
+        <div class="d-flex flex-wrap gap-2 justify-content-center mb-4">
+          <button 
+            v-for="(lista, carrera) in alumnosAgrupados" 
+            :key="'btn-' + carrera"
+            class="btn"
+            :class="carreraSeleccionada === carrera ? 'btn-primary shadow' : 'btn-outline-primary'"
+            @click="seleccionarCarrera(carrera)"
+          >
+            {{ carrera }} 
+            <span class="badge ms-1" :class="carreraSeleccionada === carrera ? 'bg-white text-primary' : 'bg-primary'">{{ lista.length }}</span>
+          </button>
+        </div>
+      </div>
+
       <div class="col-md-12">
-        <div class="card shadow">
+        <div class="card shadow mb-4" v-for="(lista, carrera) in alumnosAgrupados" :key="carrera" v-show="carreraSeleccionada === carrera">
           <div class="card-body">
-            <h5 class="card-title-lista"> Lista de Alumnos</h5>
+            <h5 class="card-title-lista mb-3" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #021937; padding-bottom: 10px;">
+              <span><i class="bi bi-mortarboard-fill me-2" style="color: #3b82f6;"></i>{{ carrera }}</span>
+              <span class="badge bg-primary rounded-pill">{{ lista.length }} alumno{{ lista.length !== 1 ? 's' : '' }}</span>
+            </h5>
             <div class="table-responsive">
               <table class="table align-middle">
                 <thead class="table-header-bg">
                   <tr>
-                    <th scope="col">ID</th>
+                    <th scope="col">#</th>
                     <th scope="col">Nombre</th>
                     <th scope="col">Ap. Paterno</th>
                     <th scope="col">Ap. Materno</th>
@@ -391,8 +431,8 @@ onMounted(cargarAlumnos);
                   </tr>
                 </thead>
                 <tbody>
-                <tr v-for="(alumno, index) in alumnos" :key="alumno.id">
-  <td class="col-id">{{ index + 1 }}</td>
+                <tr v-for="(alumno, index) in lista" :key="alumno.id">
+                  <td class="col-id text-center fw-bold">{{ index + 1 }}</td>
                   <td class="col-nombre">{{ alumno.nombre }}</td>
                   <td class="col-apellido">{{ alumno.apellidoPaterno }}</td>
                   <td class="col-apellido">{{ alumno.apellidoMaterno }}</td>
@@ -417,6 +457,13 @@ onMounted(cargarAlumnos);
             </table>
             </div>
           </div>
+        </div>
+
+        <div v-if="Object.keys(alumnosAgrupados).length === 0" class="alert alert-info text-center mt-3 shadow-sm rounded-3">
+          <i class="bi bi-info-circle me-2"></i>No hay alumnos registrados todavía.
+        </div>
+        <div v-else-if="carreraSeleccionada === ''" class="alert alert-secondary text-center mt-3 shadow-sm rounded-3" style="background-color: #f8fafc; border-color: #e2e8f0; color: #475569;">
+          <i class="bi bi-hand-index-thumb me-2 text-primary"></i>Selecciona una carrera en los botones de arriba para ver a sus alumnos.
         </div>
       </div>
     </div>
@@ -730,18 +777,14 @@ select.form-control {
   border-right: 1px solid #e2e8f0 !important;
   cursor: pointer;
 
-  min-width: 25px;  
-  width: 25px;      
+  flex: 0 0 110px !important;
+  width: 110px !important;      
 
-  padding: 6px 3px;
+  padding: 6px 10px;
   height: 36px;
 
   font-weight: 400;
-  font-size: 0.72rem;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  font-size: 0.85rem;
 }
 
 .input-group .form-control {
