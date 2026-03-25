@@ -139,17 +139,15 @@ const agregarAlumno = async () => {
       return;
     }
 
-    // Validar que el número de control no esté duplicado (solo si no estamos editando)
-    if (!editado.value) {
-      const alumnoExistente = alumnos.value.find(a => a.numeroControl === nuevoAlumno.value.numeroControl);
-      if (alumnoExistente) {
-        Swal.fire({
-          icon: 'error',
-          title: 'Número de Control Duplicado',
-          text: `Ya existe un alumno con el número de control ${nuevoAlumno.value.numeroControl}`
-        });
-        return;
-      }
+    // Validar que el número de control no esté repedito (al agregar o al editar)
+    const alumnoExistente = alumnos.value.find(a => a.numeroControl === nuevoAlumno.value.numeroControl);
+    if (alumnoExistente && (!editado.value || alumnoExistente.id !== nuevoAlumno.value.id)) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Número de Control Duplicado',
+        text: `Ya existe un alumno con el número de control ${nuevoAlumno.value.numeroControl}`
+      });
+      return;
     }
 
     // Si no hay URL de imagen, usa la por defecto
