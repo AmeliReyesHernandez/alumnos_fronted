@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, watch } from 'vue';
 import axios from 'axios';
 import Swal from 'sweetalert2';
 
@@ -253,6 +253,13 @@ const eliminarAlumnoPorId = async (id) => {
 }
 
 const carreraSeleccionada = ref('');
+const busqueda = ref('');
+
+watch(busqueda, (newVal) => {
+  if (newVal) {
+    carreraSeleccionada.value = ''; // Al buscar, deselecciona la carrera para mostrar resultados de todas
+  }
+});
 
 const seleccionarCarrera = (carrera) => {
   if (carreraSeleccionada.value === carrera) {
@@ -264,7 +271,18 @@ const seleccionarCarrera = (carrera) => {
 
 const alumnosAgrupados = computed(() => {
   const grupos = {};
+  const termino = busqueda.value.toLowerCase().trim();
+
   alumnos.value.forEach(alumno => {
+    // Si hay texto en el buscador, filtrar por coincidencia en nombre o N.º de control
+    if (termino) {
+      const nombreCompleto = `${alumno.nombre} ${alumno.apellidoPaterno} ${alumno.apellidoMaterno}`.toLowerCase();
+      const numControl = alumno.numeroControl ? alumno.numeroControl.toLowerCase() : '';
+      if (!nombreCompleto.includes(termino) && !numControl.includes(termino)) {
+        return; // Excluye al alumno si no coincide
+      }
+    }
+
     const carrera = alumno.carrera || 'Sin carrera asignada';
     if (!grupos[carrera]) {
       grupos[carrera] = [];
@@ -413,7 +431,14 @@ onMounted(cargarAlumnos);
         </div>
       </div>
 
-      <div class="col-md-12 mb-2" v-if="Object.keys(alumnosAgrupados).length > 0">
+      <div class="col-md-8 col-lg-6 mx-auto mb-4">
+        <div class="input-group shadow-sm" style="border-radius: 8px; overflow: hidden; border: 2px solid #e2e8f0; transition: border-color 0.3s ease;">
+          <span class="input-group-text bg-white border-0 text-primary py-2 px-3"><i class="bi bi-search"></i></span>
+          <input type="text" class="form-control border-0 ps-1" placeholder="Buscar alumno por nombre, apellidos o número de control..." v-model="busqueda" style="box-shadow: none;">
+        </div>
+      </div>
+
+      <div class="col-md-12 mb-2" v-if="Object.keys(alumnosAgrupados).length > 0 && busqueda === ''">
         <div class="d-flex flex-wrap gap-2 justify-content-center mb-4">
           <button 
             v-for="(lista, carrera) in alumnosAgrupados" 
@@ -429,7 +454,7 @@ onMounted(cargarAlumnos);
       </div>
 
       <div class="col-md-12">
-        <div class="card shadow mb-4" v-for="(lista, carrera) in alumnosAgrupados" :key="carrera" v-show="carreraSeleccionada === carrera">
+        <div class="card shadow mb-4" v-for="(lista, carrera) in alumnosAgrupados" :key="carrera" v-show="carreraSeleccionada === carrera || busqueda !== ''">
           <div class="card-body">
             <h5 class="card-title-lista mb-3" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #021937; padding-bottom: 10px;">
               <span><i class="bi bi-mortarboard-fill me-2" style="color: #3b82f6;"></i>{{ carrera }}</span>
@@ -498,9 +523,9 @@ onMounted(cargarAlumnos);
         </div>
 
         <div v-if="Object.keys(alumnosAgrupados).length === 0" class="alert alert-info text-center mt-3 shadow-sm rounded-3">
-          <i class="bi bi-info-circle me-2"></i>No hay alumnos registrados todavía.
+          <i class="bi bi-info-circle me-2"></i>No se encontraron alumnos registrados o que coincidan con la búsqueda.
         </div>
-        <div v-else-if="carreraSeleccionada === ''" class="alert alert-secondary text-center mt-3 shadow-sm rounded-3" style="background-color: #f8fafc; border-color: #e2e8f0; color: #475569;">
+        <div v-else-if="carreraSeleccionada === '' && busqueda === ''" class="alert alert-secondary text-center mt-3 shadow-sm rounded-3" style="background-color: #f8fafc; border-color: #e2e8f0; color: #475569;">
           <i class="bi bi-hand-index-thumb me-2 text-primary"></i>Selecciona una carrera en los botones de arriba para ver a sus alumnos.
         </div>
       </div>
