@@ -431,6 +431,12 @@ onMounted(cargarAlumnos);
         </div>
       </div>
 
+      <div class="col-md-12 text-center mb-3" v-if="alumnos.length > 0">
+        <span class="badge bg-primary px-3 py-2 shadow-sm rounded-pill" style="font-size: 0.95rem; font-weight: 500; letter-spacing: 0.3px;">
+          <i class="bi bi-people-fill me-2"></i>Total de Estudiantes: {{ alumnos.length }}
+        </span>
+      </div>
+
       <div class="col-md-8 col-lg-6 mx-auto mb-4">
         <div class="input-group shadow-sm" style="border-radius: 8px; overflow: hidden; border: 2px solid #e2e8f0; transition: border-color 0.3s ease;">
           <span class="input-group-text bg-white border-0 text-primary py-2 px-3"><i class="bi bi-search"></i></span>
