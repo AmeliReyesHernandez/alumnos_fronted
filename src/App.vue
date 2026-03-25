@@ -432,9 +432,14 @@ onMounted(cargarAlumnos);
       </div>
 
       <div class="col-md-12 text-center mb-3" v-if="alumnos.length > 0">
-        <span class="badge bg-primary px-3 py-2 shadow-sm rounded-pill" style="font-size: 0.95rem; font-weight: 500; letter-spacing: 0.3px;">
+        <button 
+          @click="seleccionarCarrera('TODAS')"
+          type="button"
+          class="btn px-3 py-2 shadow-sm rounded-pill border-0" 
+          :class="carreraSeleccionada === 'TODAS' ? 'bg-white text-primary border border-primary fw-bold' : 'bg-primary text-white'"
+          style="font-size: 0.95rem; font-weight: 500; letter-spacing: 0.3px; transition: all 0.2s ease;">
           <i class="bi bi-people-fill me-2"></i>Total de Estudiantes: {{ alumnos.length }}
-        </span>
+        </button>
       </div>
 
       <div class="col-md-8 col-lg-6 mx-auto mb-4">
@@ -460,7 +465,7 @@ onMounted(cargarAlumnos);
       </div>
 
       <div class="col-md-12">
-        <div class="card shadow mb-4" v-for="(lista, carrera) in alumnosAgrupados" :key="carrera" v-show="carreraSeleccionada === carrera || busqueda !== ''">
+        <div class="card shadow mb-4" v-for="(lista, carrera) in alumnosAgrupados" :key="carrera" v-show="carreraSeleccionada === carrera || carreraSeleccionada === 'TODAS' || busqueda !== ''">
           <div class="card-body">
             <h5 class="card-title-lista mb-3" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #021937; padding-bottom: 10px;">
               <span><i class="bi bi-mortarboard-fill me-2" style="color: #3b82f6;"></i>{{ carrera }}</span>
