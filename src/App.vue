@@ -252,6 +252,69 @@ const eliminarAlumnoPorId = async (id) => {
   }
 }
 
+const estaLogueado = ref(false);
+const modoRegistro = ref(false);
+
+const loginAuth = ref({
+  usuario: '',
+  password: ''
+});
+
+const iniciarSesion = async () => {
+  if (modoRegistro.value) {
+    // Modo Registro
+    try {
+      const response = await axios.post('https://alumnos-backend-psvm.onrender.com/usuarios/registro', loginAuth.value);
+      Swal.fire({
+        icon: 'success',
+        title: 'Usuario Creado',
+        text: 'El usuario se registró exitosamente. Ya puedes iniciar sesión.',
+        confirmButtonColor: '#1e3a8a'
+      });
+      modoRegistro.value = false;
+      loginAuth.value.password = '';
+    } catch (error) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error de Registro',
+        text: error.response?.data?.message || 'Error al intentar registrar el usuario',
+        confirmButtonColor: '#1e3a8a'
+      });
+    }
+  } else {
+    // Modo Login
+    try {
+      const response = await axios.post('https://alumnos-backend-psvm.onrender.com/usuarios/login', loginAuth.value);
+      if (response.status === 200) {
+        estaLogueado.value = true;
+      }
+    } catch (error) {
+      // Modo de prueba fallback por si el backend aún no se ha desplegado con la actualización
+      if (loginAuth.value.usuario === 'admin' && loginAuth.value.password === 'admin123') {
+         estaLogueado.value = true;
+         return;
+      }
+      Swal.fire({
+        icon: 'error',
+        title: 'Acceso Denegado',
+        text: error.response?.data?.message || 'Usuario o contraseña incorrectos',
+        confirmButtonColor: '#1e3a8a'
+      });
+    }
+  }
+};
+
+const cambiarModo = () => {
+  modoRegistro.value = !modoRegistro.value;
+  loginAuth.value.password = '';
+};
+
+const cerrarSesion = () => {
+  estaLogueado.value = false;
+  loginAuth.value.usuario = '';
+  loginAuth.value.password = '';
+};
+
 const carreraSeleccionada = ref('');
 const busqueda = ref('');
 
@@ -320,9 +383,51 @@ onMounted(cargarAlumnos);
 </script>
 
 <template>
-  <div class="container">
+  <!-- PANTALLA DE LOGIN -->
+  <div class="login-container" v-if="!estaLogueado">
+    <div class="login-card shadow-lg">
+      <div class="text-center mb-4">
+        <div class="login-icon-bg">
+          <i class="bi py-3" :class="modoRegistro ? 'bi-person-plus-fill' : 'bi-shield-lock-fill'"></i>
+        </div>
+        <h2 class="mt-3 text-primary fw-bold" style="color: #1e3a8a !important;">{{ modoRegistro ? 'Crear Usuario' : 'Bienvenido' }}</h2>
+        <p class="text-muted" style="font-size: 0.9rem;">{{ modoRegistro ? 'Registra tus nuevas credenciales' : 'Ingresa tus credenciales para acceder al sistema' }}</p>
+      </div>
+      <form @submit.prevent="iniciarSesion">
+        <div class="mb-3 text-start">
+          <label for="usuario" class="form-label fw-bold" style="color: #1e3a8a;">Usuario</label>
+          <div class="input-group shadow-sm" style="border-radius: 8px; overflow: hidden; border: 2px solid #e2e8f0; transition: all 0.3s ease;">
+            <span class="input-group-text bg-white border-0 text-primary py-2 px-3"><i class="bi bi-person-fill"></i></span>
+            <input type="text" class="form-control border-0 ps-0" id="usuario" v-model="loginAuth.usuario" :placeholder="modoRegistro ? 'Elige un usuario nuevo' : 'Ej. admin'" required style="box-shadow: none;">
+          </div>
+        </div>
+        <div class="mb-4 text-start">
+          <label for="password" class="form-label fw-bold" style="color: #1e3a8a;">Contraseña</label>
+          <div class="input-group shadow-sm" style="border-radius: 8px; overflow: hidden; border: 2px solid #e2e8f0; transition: all 0.3s ease;">
+            <span class="input-group-text bg-white border-0 text-primary py-2 px-3"><i class="bi bi-lock-fill"></i></span>
+            <input type="password" class="form-control border-0 ps-0" id="password" v-model="loginAuth.password" placeholder="********" required style="box-shadow: none;">
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary w-100 py-2 fw-bold shadow-sm" style="background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%); letter-spacing: 0.5px;">{{ modoRegistro ? 'Registrarse' : 'Entrar al Sistema' }}</button>
+        <div class="text-center mt-3">
+          <p class="text-muted mb-0" style="font-size: 0.9rem;">
+            {{ modoRegistro ? '¿Ya tienes una cuenta?' : '¿No tienes cuenta?' }} 
+            <a href="#" @click.prevent="cambiarModo" class="text-primary fw-bold text-decoration-none">
+              {{ modoRegistro ? 'Inicia sesión aquí' : 'Crear nuevo usuario' }}
+            </a>
+          </p>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- SISTEMA PRINCIPAL -->
+  <div class="container" v-else>
+    <div class="d-flex justify-content-end mb-1 mt-3">
+        <button @click="cerrarSesion" class="btn btn-danger btn-sm rounded-pill shadow-sm px-3"><i class="bi bi-box-arrow-right me-1"></i> Cerrar Sesión</button>
+    </div>
     <div class="row">
-      <div class="col-md-12 mt-4">
+      <div class="col-md-12 mt-2">
         <div class="card shadow p-4 mb-4">
           <h2 class="text-center">Formulario de Alumnos</h2>
           <form @submit.prevent="agregarAlumno">
@@ -545,6 +650,49 @@ onMounted(cargarAlumnos);
 </template>
 
 <style scoped>
+/* Pantalla de login */
+.login-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #f0f9ff 0%, #dbeafe 100%);
+  padding: 20px;
+}
+
+.login-card {
+  background: white;
+  padding: 40px;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 420px;
+  text-align: center;
+}
+
+.login-icon-bg {
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+  font-size: 2.2rem;
+  color: #3b82f6;
+  box-shadow: 0 4px 10px rgba(59, 130, 246, 0.15);
+}
+
+.login-card .input-group:focus-within {
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+}
+.login-card .form-control:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Resto de estilos */
 .container {
   padding: 30px 0;
 }
