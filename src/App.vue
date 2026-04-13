@@ -254,14 +254,32 @@ const eliminarAlumnoPorId = async (id) => {
 
 const estaLogueado = ref(false);
 const modoRegistro = ref(false);
+const mostrarPassword = ref(false);
 
 const loginAuth = ref({
   usuario: '',
   password: ''
 });
 
+const validarPassword = (password) => {
+  const minLength = password.length >= 8;
+  const hasUpper = /[A-Z]/.test(password);
+  const hasNum = /\d/.test(password);
+  const hasSpecial = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password);
+  return minLength && hasUpper && hasNum && hasSpecial;
+};
+
 const iniciarSesion = async () => {
   if (modoRegistro.value) {
+    if (!validarPassword(loginAuth.value.password)) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Contraseña débil',
+        text: 'La contraseña debe tener al menos 8 caracteres, e incluir como mínimo una letra mayúscula, un número y un carácter especial.',
+        confirmButtonColor: '#1e3a8a'
+      });
+      return;
+    }
     // Modo Registro
     try {
       const response = await axios.post('https://alumnos-backend-psvm.onrender.com/usuarios/registro', loginAuth.value);
@@ -405,7 +423,10 @@ onMounted(cargarAlumnos);
           <label for="password" class="form-label fw-bold" style="color: #1e3a8a;">Contraseña</label>
           <div class="input-group shadow-sm" style="border-radius: 8px; overflow: hidden; border: 2px solid #e2e8f0; transition: all 0.3s ease;">
             <span class="input-group-text bg-white border-0 text-primary py-2 px-3"><i class="bi bi-lock-fill"></i></span>
-            <input type="password" class="form-control border-0 ps-0" id="password" v-model="loginAuth.password" placeholder="********" required style="box-shadow: none;">
+            <input :type="mostrarPassword ? 'text' : 'password'" class="form-control border-0 ps-0" id="password" v-model="loginAuth.password" placeholder="********" required style="box-shadow: none;">
+            <button class="btn bg-white border-0 text-muted px-3" type="button" @click="mostrarPassword = !mostrarPassword" style="box-shadow: none;">
+              <i class="bi" :class="mostrarPassword ? 'bi-eye-slash-fill' : 'bi-eye-fill'"></i>
+            </button>
           </div>
         </div>
         <button type="submit" class="btn btn-primary w-100 py-2 fw-bold shadow-sm" style="background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%); letter-spacing: 0.5px;">{{ modoRegistro ? 'Registrarse' : 'Entrar al Sistema' }}</button>
