@@ -3,7 +3,7 @@ import { ref, onMounted, computed, watch } from 'vue';
 import axios from 'axios';
 import Swal from 'sweetalert2';
 
-const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8081';
+const apiBaseUrl = 'http://localhost:8080/alumnos';
 
 const alumnos = ref([]);
 
@@ -89,7 +89,7 @@ const obtenerBandera = (codigo) => {
 };
 
 const cargarAlumnos = async () => {
-  const response = await axios.get(`${apiBaseUrl}/alumnos/traer-alumnos`)
+  const response = await axios.get(`http://localhost:8080/alumnos/traer-alumnos`)
   alumnos.value = response.data;
   console.log(alumnos.value);
 }
@@ -158,7 +158,7 @@ const agregarAlumno = async () => {
     }
 
     if (editado.value) {
-      await axios.put(`${apiBaseUrl}/alumnos/editar-alumnos/${nuevoAlumno.value.id}`, nuevoAlumno.value);
+      await axios.put(`http://localhost:8080/alumnos/editar-alumnos/${nuevoAlumno.value.id}`, nuevoAlumno.value);
       Swal.fire({
         icon: 'success',
         title: 'Alumno actualizado correctamente',
@@ -167,7 +167,7 @@ const agregarAlumno = async () => {
       });
       editado.value = false;
     } else {
-      await axios.post(`${apiBaseUrl}/alumnos/insertar-alumnos`, nuevoAlumno.value);
+      await axios.post(`http://localhost:8080/alumnos/insertar-alumnos`, nuevoAlumno.value);
       Swal.fire({
         icon: 'success',
         title: 'Alumno agregado correctamente',
@@ -241,7 +241,7 @@ const eliminarAlumno = async (id) => {
 
 const eliminarAlumnoPorId = async (id) => {
   try {
-    await axios.delete(`${apiBaseUrl}/alumnos/eliminar-alumnos/${id}`);
+    await axios.delete(`http://localhost:8080/alumnos/eliminar-alumnos/${id}`);
     console.log('Alumno eliminado con id:', id);
     await cargarAlumnos();
   } catch (errr) {
@@ -284,7 +284,7 @@ const iniciarSesion = async () => {
     }
     // Modo Registro
     try {
-      const response = await axios.post(`${apiBaseUrl}/usuarios/registro`, loginAuth.value);
+      const response = await axios.post(`http://localhost:8080/usuarios/registro`, loginAuth.value);
       Swal.fire({
         icon: 'success',
         title: 'Usuario Creado',
@@ -304,7 +304,7 @@ const iniciarSesion = async () => {
   } else {
     // Modo Login
     try {
-      const response = await axios.post(`${apiBaseUrl}/usuarios/login`, loginAuth.value);
+      const response = await axios.post(`http://localhost:8080/usuarios/login`, loginAuth.value);
       if (response.status === 200) {
         estaLogueado.value = true;
       }
