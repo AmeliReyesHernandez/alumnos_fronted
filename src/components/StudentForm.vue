@@ -283,10 +283,7 @@ const limpiarFormulario = () => {
             Debe tener exactamente 10 dígitos
           </small>
         </div>
-        <div class="col-md-12 mb-3">
-          <label for="imagenURL" class="form-label">Imagen URL</label>
-          <input type="text" class="form-control" id="imagenURL" v-model="nuevoAlumno.imagenURL">
-        </div>
+
       </div>
 
       <button type="submit" class="btn btn-primary">
