@@ -28,12 +28,12 @@ const carreras = [
 
 const imagenesPorCarrera = {
   'Ingeniería en Sistemas Computacionales': 'https://www.shutterstock.com/image-vector/software-developer-sitting-desk-working-260nw-2249980829.jpg',
-  'Ingeniería en Mecatrónica': 'https://img.freepik.com/vector-premium/actividad-hombre-vida-diaria-oficina-o-lugar-trabajo-ilustracion-vectorial-personajes-dibujos-animados_1253202-324171.jpg?semt=ais_hybrid&w=740&q=80',
+  'Ingeniería en Mecatrónica': 'https://92803a6518.cbaul-cdnwnd.com/fd717052f6c6a291a52e0a16937635f2/200000310-710fc710fe/descarga%20%282%29-5.png?ph=92803a6518',
   'Ingeniería Industrial': 'https://st4.depositphotos.com/4177785/40446/v/450/depositphotos_404461514-stock-illustration-robotics-expert-flat-vector-illustration.jpg',
   'Ingeniería Civil': 'https://png.pngtree.com/png-clipart/20241230/original/pngtree-civil-engineer-construction-building-cartoon-men-and-women-png-image_18315127.png',
   'Ingeniería en Gestión Empresarial': 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRMI3YD0LpMAwvXBRGKF2lKdzjsM3V7Wj_7DQ&s',
-  'Licenciatura en Administración': 'https://i.pinimg.com/474x/04/2a/58/042a580b569b8ff9c2f271ed9f5b0886.jpg',
-  'Licenciatura en Arquitectura': 'https://previews.123rf.com/images/stockgiu/stockgiu1905/stockgiu190508161/122633092-labor-day-job-career-construction-architectural-workers-woman-and-man-cartoon-vector-illustration.jpg'
+  'Licenciatura en Administración': 'https://www.shutterstock.com/image-vector/master-business-administration-girl-graduate-260nw-2175956071.jpg',
+  'Licenciatura en Arquitectura': 'https://www.shutterstock.com/image-vector/creative-professional-architect-designer-working-260nw-2650905257.jpg'
 };
 
 const ladasMexico = [

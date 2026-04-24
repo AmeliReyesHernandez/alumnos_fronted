@@ -1,6 +1,7 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
+import { saveAs } from 'file-saver';
 
 /**
  * Convierte una URL de imagen a base64 usando canvas.
@@ -121,49 +122,109 @@ export async function exportarPDF(alumnos, titulo, nombreArchivo = 'alumnos') {
 }
 
 /**
- * Exporta alumnos a Excel (.xlsx) incluyendo la URL de la imagen como columna y como imagen embebida.
- * Nota: SheetJS CE no soporta imágenes embebidas, se incluye la URL directamente.
+ * Convierte una URL de imagen a ArrayBuffer usando canvas (CORS-safe).
+ * Devuelve null si hay error.
  */
-export function exportarExcel(alumnos, nombreHoja = 'Alumnos', nombreArchivo = 'alumnos') {
-  const datos = alumnos.map((a, i) => ({
-    '#': i + 1,
-    'Nombre': a.nombre || '',
-    'Apellido Paterno': a.apellidoPaterno || '',
-    'Apellido Materno': a.apellidoMaterno || '',
-    'Email': a.email || '',
-    'Nº Control': a.numeroControl || '',
-    'Carrera': a.carrera || '',
-    'Lada': a.lada || '',
-    'Teléfono': a.telefono || '',
-    'Imagen URL': a.imagenURL || '',
-  }));
+const urlToArrayBuffer = (url) =>
+  new Promise((resolve) => {
+    if (!url) return resolve(null);
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width = 60;
+        canvas.height = 60;
+        canvas.getContext('2d').drawImage(img, 0, 0, 60, 60);
+        canvas.toBlob((blob) => {
+          if (!blob) return resolve(null);
+          blob.arrayBuffer().then(resolve).catch(() => resolve(null));
+        }, 'image/png');
+      } catch {
+        resolve(null);
+      }
+    };
+    img.onerror = () => resolve(null);
+    img.src = url.includes('?') ? url + '&_nc=' + Date.now() : url + '?_nc=' + Date.now();
+  });
 
-  const hoja = XLSX.utils.json_to_sheet(datos);
+/**
+ * Exporta alumnos a Excel (.xlsx) con imágenes reales embebidas usando ExcelJS.
+ */
+export async function exportarExcel(alumnos, nombreHoja = 'Alumnos', nombreArchivo = 'alumnos') {
+  const workbook = new ExcelJS.Workbook();
+  workbook.creator = 'Sistema Escolar';
+  workbook.created = new Date();
 
-  // Ancho de columnas
-  hoja['!cols'] = [
-    { wch: 5 },
-    { wch: 16 },
-    { wch: 18 },
-    { wch: 18 },
-    { wch: 30 },
-    { wch: 12 },
-    { wch: 45 },
-    { wch: 8 },
-    { wch: 12 },
-    { wch: 60 },
-  ];
+  const sheet = workbook.addWorksheet(nombreHoja.substring(0, 31));
 
-  // Convertir la columna de URL de imagen en hipervínculos
-  const totalFilas = datos.length + 1; // +1 por header
-  for (let row = 2; row <= totalFilas; row++) {
-    const cellRef = `J${row}`; // columna J = Imagen URL
-    if (hoja[cellRef] && hoja[cellRef].v) {
-      hoja[cellRef].l = { Target: hoja[cellRef].v, tooltip: 'Ver imagen' };
+  // ── Encabezados ──
+  const headers = ['#', 'Nombre', 'Ap. Paterno', 'Ap. Materno', 'Email', 'Nº Control', 'Carrera', 'Lada', 'Teléfono', 'Foto'];
+  sheet.addRow(headers);
+
+  // Estilo encabezado
+  const headerRow = sheet.getRow(1);
+  headerRow.height = 20;
+  headerRow.eachCell((cell) => {
+    cell.fill   = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E3A8A' } };
+    cell.font   = { bold: true, color: { argb: 'FFFFFFFF' }, size: 11 };
+    cell.alignment = { vertical: 'middle', horizontal: 'center' };
+    cell.border = {
+      bottom: { style: 'medium', color: { argb: 'FF3B82F6' } },
+    };
+  });
+
+  // Anchos de columna
+  const colWidths = [5, 16, 18, 18, 30, 14, 45, 8, 14, 12];
+  colWidths.forEach((w, i) => { sheet.getColumn(i + 1).width = w; });
+
+  // ── Pre-cargar imágenes en paralelo ──
+  const buffers = await Promise.all(alumnos.map(a => urlToArrayBuffer(a.imagenURL)));
+
+  const ROW_HEIGHT = 60; // puntos (~80 px)
+  const IMG_SIZE   = 45; // px dentro de la celda
+
+  for (let i = 0; i < alumnos.length; i++) {
+    const a   = alumnos[i];
+    const row = sheet.addRow([
+      i + 1,
+      a.nombre || '',
+      a.apellidoPaterno || '',
+      a.apellidoMaterno || '',
+      a.email || '',
+      a.numeroControl || '',
+      a.carrera || '',
+      a.lada || '',
+      a.telefono || '',
+      '',   // celda J reservada para la imagen
+    ]);
+
+    row.height = ROW_HEIGHT;
+    row.eachCell({ includeEmpty: true }, (cell) => {
+      cell.alignment = { vertical: 'middle', horizontal: 'left', wrapText: true };
+      if (i % 2 === 1) {
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFEFF6FF' } };
+      }
+    });
+
+    // Centrar columnas numéricas
+    ['A', 'F', 'H'].forEach(col => {
+      sheet.getCell(`${col}${row.number}`).alignment = { vertical: 'middle', horizontal: 'center' };
+    });
+
+    // ── Embeber imagen en columna J ──
+    const buf = buffers[i];
+    if (buf) {
+      const imageId = workbook.addImage({ buffer: buf, extension: 'png' });
+      sheet.addImage(imageId, {
+        tl: { col: 9.25, row: row.number - 1 + 0.15 },   // col 9 = columna J, offset para centrar
+        ext: { width: IMG_SIZE, height: IMG_SIZE },
+        editAs: 'oneCell',
+      });
     }
   }
 
-  const libro = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(libro, hoja, nombreHoja.substring(0, 31));
-  XLSX.writeFile(libro, `${nombreArchivo}.xlsx`);
+  // ── Generar y descargar ──
+  const buffer = await workbook.xlsx.writeBuffer();
+  saveAs(new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }), `${nombreArchivo}.xlsx`);
 }

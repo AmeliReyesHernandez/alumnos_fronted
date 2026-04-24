@@ -12,6 +12,8 @@
     "axios": "^1.9.0",
     "bootstrap": "^5.3.5",
     "bootstrap-icons": "^1.11.3",
+    "exceljs": "^4.4.0",
+    "file-saver": "^2.0.5",
     "front_alumnos": "file:",
     "jspdf": "^4.2.1",
     "jspdf-autotable": "^5.0.7",

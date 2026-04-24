@@ -17,6 +17,7 @@ const emit = defineEmits(['edit-student', 'refresh-list']);
 const carreraSeleccionada = ref('');
 const busqueda = ref('');
 const descargandoPDFTotal = ref(false);
+const descargandoExcelTotal = ref(false);
 
 const descargarPDFCompleto = async () => {
   descargandoPDFTotal.value = true;
@@ -24,6 +25,15 @@ const descargarPDFCompleto = async () => {
     await exportarPDF(props.alumnos, 'Lista completa de alumnos — Todas las carreras', 'alumnos_completo');
   } finally {
     descargandoPDFTotal.value = false;
+  }
+};
+
+const descargarExcelCompleto = async () => {
+  descargandoExcelTotal.value = true;
+  try {
+    await exportarExcel(props.alumnos, 'Todos los Alumnos', 'alumnos_completo');
+  } finally {
+    descargandoExcelTotal.value = false;
   }
 };
 
@@ -130,9 +140,12 @@ const editarAlumnos = (alumno) => {
           type="button"
           class="btn btn-success btn-sm rounded-pill shadow-sm px-3"
           title="Descargar lista completa en Excel"
-          @click="exportarExcel(props.alumnos, 'Todos los Alumnos', 'alumnos_completo')"
+          :disabled="descargandoExcelTotal"
+          @click="descargarExcelCompleto"
         >
-          <i class="bi bi-file-earmark-excel-fill me-1"></i>Excel Completo
+          <span v-if="descargandoExcelTotal" class="spinner-border spinner-border-sm me-1" role="status"></span>
+          <i v-else class="bi bi-file-earmark-excel-fill me-1"></i>
+          {{ descargandoExcelTotal ? 'Generando...' : 'Excel Completo' }}
         </button>
       </div>
     </div>

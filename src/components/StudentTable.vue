@@ -2,7 +2,8 @@
 import { ref, computed, watch } from 'vue';
 import { exportarPDF, exportarExcel } from '../composables/useExport.js';
 
-const descargandoPDF = ref(false);
+const descargandoPDF   = ref(false);
+const descargandoExcel = ref(false);
 
 const descargarPDF = async () => {
   descargandoPDF.value = true;
@@ -14,6 +15,19 @@ const descargarPDF = async () => {
     );
   } finally {
     descargandoPDF.value = false;
+  }
+};
+
+const descargarExcel = async () => {
+  descargandoExcel.value = true;
+  try {
+    await exportarExcel(
+      props.alumnos,
+      props.carrera.substring(0, 31),
+      'alumnos_' + props.carrera.replace(/\s+/g, '_').toLowerCase()
+    );
+  } finally {
+    descargandoExcel.value = false;
   }
 };
 
@@ -77,9 +91,12 @@ const cambiarPagina = (nuevaPagina) => {
             class="btn btn-sm btn-outline-success"
             style="font-size: 0.75rem; padding: 3px 10px; border-radius: 50px;"
             title="Descargar lista en Excel"
-            @click="exportarExcel(props.alumnos, props.carrera.substring(0,31), 'alumnos_' + props.carrera.replace(/\s+/g,'_').toLowerCase())"
+            :disabled="descargandoExcel"
+            @click="descargarExcel"
           >
-            <i class="bi bi-file-earmark-excel-fill me-1"></i>Excel
+            <span v-if="descargandoExcel" class="spinner-border spinner-border-sm me-1" role="status"></span>
+            <i v-else class="bi bi-file-earmark-excel-fill me-1"></i>
+            {{ descargandoExcel ? 'Generando...' : 'Excel' }}
           </button>
         </div>
       </h5>
