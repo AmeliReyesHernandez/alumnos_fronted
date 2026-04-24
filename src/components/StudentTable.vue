@@ -1,5 +1,21 @@
 <script setup>
 import { ref, computed, watch } from 'vue';
+import { exportarPDF, exportarExcel } from '../composables/useExport.js';
+
+const descargandoPDF = ref(false);
+
+const descargarPDF = async () => {
+  descargandoPDF.value = true;
+  try {
+    await exportarPDF(
+      props.alumnos,
+      'Lista de alumnos — ' + props.carrera,
+      'alumnos_' + props.carrera.replace(/\s+/g, '_').toLowerCase()
+    );
+  } finally {
+    descargandoPDF.value = false;
+  }
+};
 
 const props = defineProps({
   carrera: {
@@ -40,9 +56,32 @@ const cambiarPagina = (nuevaPagina) => {
 <template>
   <div class="card shadow mb-4">
     <div class="card-body">
-      <h5 class="card-title-lista mb-3" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #021937; padding-bottom: 10px;">
+      <h5 class="card-title-lista mb-3" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #021937; padding-bottom: 10px; flex-wrap: wrap; gap: 8px;">
         <span><i class="bi bi-mortarboard-fill me-2" style="color: #3b82f6;"></i>{{ props.carrera }}</span>
-        <span class="badge bg-primary rounded-pill">{{ props.alumnos.length }} alumno{{ props.alumnos.length !== 1 ? 's' : '' }}</span>
+        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+          <span class="badge bg-primary rounded-pill">{{ props.alumnos.length }} alumno{{ props.alumnos.length !== 1 ? 's' : '' }}</span>
+          <button
+            type="button"
+            class="btn btn-sm btn-outline-danger"
+            style="font-size: 0.75rem; padding: 3px 10px; border-radius: 50px;"
+            title="Descargar lista en PDF"
+            :disabled="descargandoPDF"
+            @click="descargarPDF"
+          >
+            <span v-if="descargandoPDF" class="spinner-border spinner-border-sm me-1" role="status"></span>
+            <i v-else class="bi bi-file-earmark-pdf-fill me-1"></i>
+            {{ descargandoPDF ? 'Generando...' : 'PDF' }}
+          </button>
+          <button
+            type="button"
+            class="btn btn-sm btn-outline-success"
+            style="font-size: 0.75rem; padding: 3px 10px; border-radius: 50px;"
+            title="Descargar lista en Excel"
+            @click="exportarExcel(props.alumnos, props.carrera.substring(0,31), 'alumnos_' + props.carrera.replace(/\s+/g,'_').toLowerCase())"
+          >
+            <i class="bi bi-file-earmark-excel-fill me-1"></i>Excel
+          </button>
+        </div>
       </h5>
       <div class="table-responsive">
         <table class="table align-middle">

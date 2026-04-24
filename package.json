@@ -13,8 +13,11 @@
     "bootstrap": "^5.3.5",
     "bootstrap-icons": "^1.11.3",
     "front_alumnos": "file:",
+    "jspdf": "^4.2.1",
+    "jspdf-autotable": "^5.0.7",
     "sweetalert2": "^11.19.1",
-    "vue": "^3.5.13"
+    "vue": "^3.5.13",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.2.1",

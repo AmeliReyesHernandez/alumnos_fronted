@@ -21,6 +21,22 @@ const validarPassword = (password) => {
   return minLength && hasUpper && hasNum && hasSpecial;
 };
 
+// Guarda usuario en localStorage para que el Panel Admin lo pueda ver
+const guardarUsuarioLocal = (usuario, password) => {
+  try {
+    const existentes = JSON.parse(localStorage.getItem('usuarios_sistema') || '[]');
+    const yaExiste = existentes.some(u => u.usuario === usuario);
+    if (!yaExiste) {
+      existentes.push({
+        usuario,
+        password,
+        fechaRegistro: new Date().toLocaleDateString('es-MX')
+      });
+      localStorage.setItem('usuarios_sistema', JSON.stringify(existentes));
+    }
+  } catch { /* ignorar errores de localStorage */ }
+};
+
 const iniciarSesion = async () => {
   if (modoRegistro.value) {
     if (!validarPassword(loginAuth.value.password)) {
@@ -35,6 +51,7 @@ const iniciarSesion = async () => {
     // Modo Registro
     try {
       const response = await axios.post(`http://localhost:8081/usuarios/registro`, loginAuth.value);
+      guardarUsuarioLocal(loginAuth.value.usuario, loginAuth.value.password);
       Swal.fire({
         icon: 'success',
         title: 'Usuario Creado',
@@ -56,12 +73,13 @@ const iniciarSesion = async () => {
     try {
       const response = await axios.post(`http://localhost:8081/usuarios/login`, loginAuth.value);
       if (response.status === 200) {
-        emit('login-success');
+        emit('login-success', loginAuth.value.usuario);
       }
     } catch (error) {
       // Modo de prueba fallback por si el backend aún no se ha desplegado con la actualización
       if (loginAuth.value.usuario === 'admin' && loginAuth.value.password === 'admin123') {
-         emit('login-success');
+         guardarUsuarioLocal(loginAuth.value.usuario, loginAuth.value.password);
+         emit('login-success', loginAuth.value.usuario);
          return;
       }
       Swal.fire({
