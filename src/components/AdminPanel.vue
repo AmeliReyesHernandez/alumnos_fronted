@@ -14,20 +14,17 @@ const fuenteDatos = ref(''); // 'backend' | 'local'
 const busqueda = ref('');
 
 onMounted(async () => {
-  // 0. Seguridad: solo si es admin
   if (props.usuarioLogueado !== 'admin') {
     emit('cerrar');
     return;
   }
 
-  // 1. Intentar cargar del backend
   try {
     const res = await axios.get('http://localhost:8081/usuarios/listar');
     if (res.data && res.data.length > 0) {
       usuarios.value = res.data;
       fuenteDatos.value = 'backend';
-
-      // Sincronizar con localStorage también
+      
       const local = JSON.parse(localStorage.getItem('usuarios_sistema') || '[]');
       res.data.forEach(u => {
         if (!local.some(l => l.usuario === u.usuario)) {
@@ -42,9 +39,8 @@ onMounted(async () => {
       cargando.value = false;
       return;
     }
-  } catch { /* backend no disponible, usar localStorage */ }
+  } catch { }
 
-  // 2. Fallback: cargar de localStorage
   try {
     const local = JSON.parse(localStorage.getItem('usuarios_sistema') || '[]');
     usuarios.value = local;
@@ -72,147 +68,117 @@ const togglePassword = (idx) => {
 
 <template>
   <div class="admin-overlay" @click.self="emit('cerrar')" v-if="usuarioLogueado === 'admin'">
-    <div class="admin-panel">
-
+    <div class="admin-modal">
       <!-- Header -->
       <div class="admin-header">
-        <div class="admin-header-left">
-          <div class="admin-icon-wrap">
-            <i class="bi bi-shield-lock-fill"></i>
+        <div class="header-content">
+          <div class="icon-box">
+            <i class="bi bi-shield-lock"></i>
           </div>
-          <div>
-            <h2 class="admin-title">Panel de Administrador</h2>
-            <p class="admin-subtitle">Usuarios registrados en el sistema</p>
+          <div class="header-text">
+            <h2>Gestión de Usuarios</h2>
+            <p>Panel administrativo de acceso al sistema</p>
           </div>
         </div>
-        <button class="admin-close-btn" @click="emit('cerrar')" title="Cerrar">
-          <i class="bi bi-x-lg"></i>
+        <button class="btn-close-modal" @click="emit('cerrar')">
+          <i class="bi bi-x"></i>
         </button>
       </div>
 
-      <!-- Stats + fuente -->
-      <div class="admin-stats" v-if="!cargando">
-        <div class="stat-chip">
-          <i class="bi bi-people-fill me-2"></i>
-          Total de usuarios: <strong class="ms-1">{{ usuarios.length }}</strong>
+      <!-- Toolbar -->
+      <div class="admin-toolbar">
+        <div class="search-container">
+          <i class="bi bi-search"></i>
+          <input 
+            type="text" 
+            v-model="busqueda" 
+            placeholder="Buscar por nombre de usuario..."
+          />
         </div>
-        <span v-if="fuenteDatos === 'local'" class="source-badge local">
-          <i class="bi bi-hdd-fill me-1"></i>Datos locales
-        </span>
-        <span v-else-if="fuenteDatos === 'backend'" class="source-badge backend">
-          <i class="bi bi-cloud-fill me-1"></i>Servidor
-        </span>
-      </div>
-
-      <!-- Buscador -->
-      <div class="admin-search" v-if="!cargando && usuarios.length > 0">
-        <i class="bi bi-search search-icon"></i>
-        <input
-          type="text"
-          v-model="busqueda"
-          placeholder="Buscar usuario..."
-          class="search-input"
-        />
-      </div>
-
-      <!-- Loading -->
-      <div v-if="cargando" class="admin-center">
-        <div class="spinner-border text-primary" role="status"></div>
-        <p class="mt-3">Cargando usuarios...</p>
-      </div>
-
-      <!-- Sin usuarios -->
-      <div v-else-if="usuarios.length === 0" class="admin-center">
-        <div class="empty-icon">
-          <i class="bi bi-person-x"></i>
+        <div class="status-summary" v-if="!cargando">
+          <span class="count-badge">
+            <i class="bi bi-people me-1"></i> {{ usuarios.length }} Usuarios
+          </span>
+          <span :class="['source-indicator', fuenteDatos]">
+            <i :class="fuenteDatos === 'backend' ? 'bi bi-cloud-check' : 'bi bi-hdd'"></i>
+            {{ fuenteDatos === 'backend' ? 'Sincronizado' : 'Modo Local' }}
+          </span>
         </div>
-        <p class="mt-3 mb-1" style="color:#94a3b8; font-weight:600;">No hay usuarios registrados</p>
-        <p style="color:#475569; font-size:0.82rem;">Los usuarios aparecerán aquí cuando se registren en el sistema.</p>
       </div>
 
-      <!-- Sin resultados de búsqueda -->
-      <div v-else-if="usuariosFiltrados.length === 0" class="admin-center">
-        <i class="bi bi-search fs-1" style="color:#334155;"></i>
-        <p class="mt-3" style="color:#64748b;">No se encontraron usuarios con "{{ busqueda }}"</p>
-      </div>
+      <!-- Main Content -->
+      <div class="admin-body">
+        <!-- Loading -->
+        <div v-if="cargando" class="state-container">
+          <div class="spinner-border text-primary" role="status"></div>
+          <p>Cargando registros...</p>
+        </div>
 
-      <!-- Tabla de usuarios -->
-      <div v-else class="admin-table-wrap">
-        <table class="admin-table">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th><i class="bi bi-person-fill me-1"></i>Usuario</th>
-              <th><i class="bi bi-lock-fill me-1"></i>Contraseña</th>
-              <th><i class="bi bi-calendar-fill me-1"></i>Registro</th>
-              <th>Estado</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr
-              v-for="(user, index) in usuariosFiltrados"
-              :key="user.id || user.usuario || index"
-              class="admin-row"
-            >
-              <!-- Número -->
-              <td class="cell-num">{{ index + 1 }}</td>
+        <!-- No hay usuarios -->
+        <div v-else-if="usuarios.length === 0" class="state-container">
+          <i class="bi bi-person-x empty-icon"></i>
+          <h3>Sin registros</h3>
+          <p>No se encontraron usuarios en la base de datos.</p>
+        </div>
 
-              <!-- Usuario -->
-              <td class="cell-user">
-                <div class="user-badge">
-                  <div class="user-avatar">
-                    {{ user.usuario ? user.usuario[0].toUpperCase() : '?' }}
-                  </div>
-                  <div>
-                    <div class="user-name">{{ user.usuario }}</div>
-                    <div class="user-role" v-if="user.usuario === 'admin'">
-                      <i class="bi bi-shield-fill me-1"></i>Administrador
+        <!-- Tabla -->
+        <div v-else class="table-responsive custom-table-container">
+          <table class="table align-middle mb-0">
+            <thead>
+              <tr class="table-header-bg">
+                <th class="ps-4">#</th>
+                <th>Usuario</th>
+                <th>Contraseña</th>
+                <th>F. Registro</th>
+                <th class="text-center pe-4">Estado</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="(user, index) in usuariosFiltrados" :key="user.id || index">
+                <td class="ps-4 text-muted small">{{ index + 1 }}</td>
+                <td>
+                  <div class="d-flex align-items-center">
+                    <div class="avatar-sm me-3">
+                      {{ user.usuario ? user.usuario[0].toUpperCase() : '?' }}
                     </div>
-                    <div class="user-role normal" v-else>
-                      <i class="bi bi-person me-1"></i>Usuario
+                    <div>
+                      <div class="fw-bold text-dark">{{ user.usuario }}</div>
+                      <div class="small text-muted">{{ user.usuario === 'admin' ? 'Superusuario' : 'Estándar' }}</div>
                     </div>
                   </div>
-                </div>
-              </td>
+                </td>
+                <td>
+                  <div class="password-wrapper">
+                    <span :class="{ 'blurred': !mostrarPassword[index] }">
+                      {{ user.password || '••••••••' }}
+                    </span>
+                    <button class="btn-toggle-view" @click="togglePassword(index)">
+                      <i class="bi" :class="mostrarPassword[index] ? 'bi-eye-slash' : 'bi-eye'"></i>
+                    </button>
+                  </div>
+                </td>
+                <td class="text-muted small">
+                  {{ user.fechaRegistro || '—' }}
+                </td>
+                <td class="text-center pe-4">
+                  <span class="badge-status">Activo</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
 
-              <!-- Contraseña -->
-              <td class="cell-pass">
-                <div class="pass-row">
-                  <span class="pass-value" :style="mostrarPassword[index] ? '' : 'filter: blur(4px); user-select:none;'">
-                    {{ user.password || '—' }}
-                  </span>
-                  <button
-                    class="btn-eye"
-                    @click="togglePassword(index)"
-                    :title="mostrarPassword[index] ? 'Ocultar' : 'Mostrar'"
-                  >
-                    <i class="bi" :class="mostrarPassword[index] ? 'bi-eye-slash-fill' : 'bi-eye-fill'"></i>
-                  </button>
-                </div>
-              </td>
-
-              <!-- Fecha registro -->
-              <td class="cell-date">{{ user.fechaRegistro || '—' }}</td>
-
-              <!-- Estado -->
-              <td>
-                <span class="status-chip active">
-                  <i class="bi bi-circle-fill me-1" style="font-size:0.45rem; vertical-align:middle;"></i>Activo
-                </span>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        <!-- Sin resultados de búsqueda -->
+        <div v-if="!cargando && usuarios.length > 0 && usuariosFiltrados.length === 0" class="state-container">
+          <i class="bi bi-search empty-icon"></i>
+          <p>No hay coincidencias para "{{ busqueda }}"</p>
+        </div>
       </div>
 
       <!-- Footer -->
       <div class="admin-footer">
-        <i class="bi bi-info-circle me-1"></i>
-        Las contraseñas están ocultas por defecto. Haz clic en
-        <i class="bi bi-eye-fill mx-1"></i> para verlas.
-        Solo visible para administradores.
+        <p><i class="bi bi-info-circle me-1"></i> Solo el administrador puede gestionar estas credenciales.</p>
       </div>
-
     </div>
   </div>
 </template>
@@ -220,360 +186,272 @@ const togglePassword = (idx) => {
 <style scoped>
 .admin-overlay {
   position: fixed;
-  inset: 0;
-  background: rgba(5, 15, 40, 0.82);
-  backdrop-filter: blur(6px);
-  z-index: 9999;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(4px);
+  z-index: 1050;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 1rem;
-  animation: fadeIn 0.25s ease;
+  padding: 20px;
+  animation: fadeIn 0.3s ease;
 }
 
 @keyframes fadeIn {
   from { opacity: 0; }
-  to   { opacity: 1; }
+  to { opacity: 1; }
 }
 
-.admin-panel {
-  background: linear-gradient(145deg, #0f172a, #1e293b);
-  border: 1px solid rgba(99, 130, 246, 0.25);
-  border-radius: 20px;
+.admin-modal {
+  background: white;
   width: 100%;
-  max-width: 800px;
-  max-height: 88vh;
-  overflow: hidden;
+  max-width: 850px;
+  max-height: 90vh;
+  border-radius: 20px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
   display: flex;
   flex-direction: column;
-  box-shadow: 0 25px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(99,130,246,0.1);
-  animation: slideUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  overflow: hidden;
+  animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @keyframes slideUp {
-  from { transform: translateY(40px); opacity: 0; }
-  to   { transform: translateY(0);    opacity: 1; }
+  from { transform: translateY(30px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
 }
 
-/* ── Header ── */
+/* --- Header --- */
 .admin-header {
+  background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+  padding: 24px 32px;
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  padding: 1.5rem 1.75rem 1rem;
-  border-bottom: 1px solid rgba(99, 130, 246, 0.2);
-  background: linear-gradient(135deg, rgba(30,58,138,0.4), rgba(59,130,246,0.15));
-  flex-shrink: 0;
+  align-items: center;
+  color: white;
 }
 
-.admin-header-left {
+.header-content {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 20px;
 }
 
-.admin-icon-wrap {
-  width: 50px;
-  height: 50px;
-  border-radius: 14px;
-  background: linear-gradient(135deg, #3b82f6, #1e40af);
+.icon-box {
+  width: 48px;
+  height: 48px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.4rem;
-  color: white;
-  box-shadow: 0 4px 15px rgba(59,130,246,0.4);
-  flex-shrink: 0;
+  font-size: 1.5rem;
 }
 
-.admin-title {
-  color: #e2e8f0;
-  font-size: 1.2rem;
+.header-text h2 {
+  margin: 0;
+  font-size: 1.25rem;
   font-weight: 700;
-  margin: 0;
+  color: white;
+  text-shadow: none;
 }
 
-.admin-subtitle {
-  color: #64748b;
-  font-size: 0.82rem;
+.header-text p {
   margin: 0;
-  margin-top: 2px;
+  font-size: 0.85rem;
+  opacity: 0.85;
 }
 
-.admin-close-btn {
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.1);
+.btn-close-modal {
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: white;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-close-modal:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* --- Toolbar --- */
+.admin-toolbar {
+  padding: 20px 32px;
+  border-bottom: 1px solid #f1f5f9;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.search-container {
+  position: relative;
+  flex: 1;
+  min-width: 250px;
+}
+
+.search-container i {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
   color: #94a3b8;
+}
+
+.search-container input {
+  width: 100%;
+  padding: 10px 15px 10px 40px;
+  border: 1px solid #e2e8f0;
   border-radius: 10px;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+
+.search-container input:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  outline: none;
+}
+
+.status-summary {
+  display: flex;
+  gap: 12px;
+}
+
+.count-badge {
+  background: #f8fafc;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+}
+
+.source-indicator {
+  font-size: 0.75rem;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.source-indicator.backend { background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; }
+.source-indicator.local { background: #fffbeb; color: #d97706; border: 1px solid #fde68a; }
+
+/* --- Table --- */
+.admin-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0;
+}
+
+.custom-table-container {
+  min-height: 300px;
+}
+
+.table-header-bg {
+  background: #f8fafc;
+}
+
+.table-header-bg th {
+  padding: 15px 10px;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #64748b;
+  font-weight: 700;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.avatar-sm {
   width: 36px;
   height: 36px;
+  background: #e0e7ff;
+  color: #4338ca;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  flex-shrink: 0;
-}
-
-.admin-close-btn:hover {
-  background: rgba(239,68,68,0.2);
-  border-color: rgba(239,68,68,0.4);
-  color: #fca5a5;
-}
-
-/* ── Stats bar ── */
-.admin-stats {
-  padding: 0.8rem 1.75rem;
-  border-bottom: 1px solid rgba(99,130,246,0.1);
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  flex-shrink: 0;
-}
-
-.stat-chip {
-  display: inline-flex;
-  align-items: center;
-  background: rgba(59,130,246,0.12);
-  border: 1px solid rgba(59,130,246,0.25);
-  border-radius: 50px;
-  padding: 0.3rem 1rem;
-  color: #93c5fd;
-  font-size: 0.875rem;
-}
-
-.source-badge {
-  font-size: 0.75rem;
-  border-radius: 50px;
-  padding: 0.25rem 0.7rem;
-  font-weight: 600;
-}
-
-.source-badge.local {
-  background: rgba(234,179,8,0.12);
-  border: 1px solid rgba(234,179,8,0.3);
-  color: #fde047;
-}
-
-.source-badge.backend {
-  background: rgba(34,197,94,0.12);
-  border: 1px solid rgba(34,197,94,0.3);
-  color: #86efac;
-}
-
-/* ── Buscador ── */
-.admin-search {
-  padding: 0.75rem 1.75rem;
-  border-bottom: 1px solid rgba(99,130,246,0.1);
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  flex-shrink: 0;
-}
-
-.search-icon {
-  color: #475569;
+  font-weight: 800;
   font-size: 0.9rem;
 }
 
-.search-input {
+.password-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #f1f5f9;
+  padding: 4px 10px;
+  border-radius: 8px;
+  width: fit-content;
+  min-width: 140px;
+}
+
+.password-wrapper span {
+  font-family: monospace;
+  font-size: 0.9rem;
+  flex: 1;
+}
+
+.blurred {
+  filter: blur(4px);
+  user-select: none;
+}
+
+.btn-toggle-view {
   background: transparent;
   border: none;
-  outline: none;
-  color: #e2e8f0;
-  font-size: 0.875rem;
-  width: 100%;
+  color: #64748b;
+  cursor: pointer;
+  padding: 0 4px;
 }
 
-.search-input::placeholder {
-  color: #334155;
+.badge-status {
+  background: #dcfce7;
+  color: #166534;
+  padding: 4px 12px;
+  border-radius: 10px;
+  font-size: 0.75rem;
+  font-weight: 700;
 }
 
-/* ── Loading / Empty ── */
-.admin-center {
+/* --- States --- */
+.state-container {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 3rem 2rem;
-  color: #64748b;
+  padding: 60px 20px;
   text-align: center;
-  flex: 1;
+  color: #64748b;
 }
 
 .empty-icon {
-  width: 64px;
-  height: 64px;
-  border-radius: 16px;
-  background: rgba(30,58,138,0.3);
-  border: 1px solid rgba(59,130,246,0.2);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.8rem;
-  color: #3b82f6;
+  font-size: 3rem;
+  margin-bottom: 15px;
+  opacity: 0.3;
 }
 
-/* ── Tabla ── */
-.admin-table-wrap {
-  overflow-y: auto;
-  flex: 1;
-  padding: 1rem 1.5rem 0.5rem;
-}
-
-.admin-table {
-  width: 100%;
-  border-collapse: separate;
-  border-spacing: 0 5px;
-}
-
-.admin-table thead th {
-  color: #475569;
-  font-size: 0.75rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.7px;
-  padding: 0.4rem 0.75rem;
-  border: none;
-}
-
-.admin-row td {
-  background: rgba(255,255,255,0.03);
-  padding: 0.75rem 0.75rem;
-  border: none;
-  transition: background 0.15s;
-}
-
-.admin-row:hover td {
-  background: rgba(59,130,246,0.07);
-}
-
-.admin-row td:first-child { border-radius: 10px 0 0 10px; }
-.admin-row td:last-child  { border-radius: 0 10px 10px 0; }
-
-/* número */
-.cell-num {
-  color: #334155;
-  font-size: 0.82rem;
-  text-align: center;
-  width: 36px;
-}
-
-/* usuario */
-.cell-user { }
-
-.user-badge {
-  display: flex;
-  align-items: center;
-  gap: 0.65rem;
-}
-
-.user-avatar {
-  width: 34px;
-  height: 34px;
-  border-radius: 9px;
-  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-weight: 700;
-  font-size: 0.9rem;
-  flex-shrink: 0;
-}
-
-.user-name {
-  color: #e2e8f0;
-  font-weight: 600;
-  font-size: 0.88rem;
-}
-
-.user-role {
-  font-size: 0.72rem;
-  color: #f59e0b;
-  margin-top: 1px;
-}
-
-.user-role.normal {
-  color: #64748b;
-}
-
-/* contraseña */
-.cell-pass { max-width: 220px; }
-
-.pass-row {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.pass-value {
-  font-family: 'Courier New', monospace;
-  background: rgba(0,0,0,0.35);
-  border: 1px solid rgba(99,130,246,0.2);
-  border-radius: 6px;
-  padding: 0.2rem 0.6rem;
-  color: #7dd3fc;
-  font-size: 0.78rem;
-  word-break: break-all;
-  white-space: normal;
-  flex: 1;
-  transition: filter 0.2s ease;
-}
-
-.btn-eye {
-  background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(255,255,255,0.1);
-  border-radius: 7px;
-  color: #64748b;
-  width: 28px;
-  height: 28px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  font-size: 0.8rem;
-  flex-shrink: 0;
-  transition: all 0.2s;
-}
-
-.btn-eye:hover {
-  background: rgba(59,130,246,0.2);
-  color: #93c5fd;
-  border-color: rgba(59,130,246,0.4);
-}
-
-/* fecha */
-.cell-date {
-  color: #475569;
-  font-size: 0.8rem;
-  white-space: nowrap;
-}
-
-/* estado */
-.status-chip {
-  display: inline-flex;
-  align-items: center;
-  border-radius: 50px;
-  padding: 0.2rem 0.65rem;
-  font-size: 0.75rem;
-  font-weight: 600;
-  white-space: nowrap;
-}
-
-.status-chip.active {
-  background: rgba(34,197,94,0.12);
-  border: 1px solid rgba(34,197,94,0.3);
-  color: #86efac;
-}
-
-/* ── Footer ── */
+/* --- Footer --- */
 .admin-footer {
-  padding: 0.75rem 1.75rem;
-  border-top: 1px solid rgba(99,130,246,0.15);
-  color: #475569;
-  font-size: 0.78rem;
-  text-align: center;
-  flex-shrink: 0;
+  padding: 15px 32px;
+  background: #f8fafc;
+  border-top: 1px solid #f1f5f9;
+  font-size: 0.8rem;
+  color: #94a3b8;
+}
+
+.admin-footer p {
+  margin: 0;
 }
 </style>
