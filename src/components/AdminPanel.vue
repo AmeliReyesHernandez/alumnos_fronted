@@ -2,6 +2,10 @@
 import { ref, onMounted, computed } from 'vue';
 import axios from 'axios';
 
+const props = defineProps({
+  usuarioLogueado: { type: String, default: '' }
+});
+
 const emit = defineEmits(['cerrar']);
 
 const usuarios = ref([]);
@@ -10,6 +14,12 @@ const fuenteDatos = ref(''); // 'backend' | 'local'
 const busqueda = ref('');
 
 onMounted(async () => {
+  // 0. Seguridad: solo si es admin
+  if (props.usuarioLogueado !== 'admin') {
+    emit('cerrar');
+    return;
+  }
+
   // 1. Intentar cargar del backend
   try {
     const res = await axios.get('http://localhost:8081/usuarios/listar');
@@ -61,7 +71,7 @@ const togglePassword = (idx) => {
 </script>
 
 <template>
-  <div class="admin-overlay" @click.self="emit('cerrar')">
+  <div class="admin-overlay" @click.self="emit('cerrar')" v-if="usuarioLogueado === 'admin'">
     <div class="admin-panel">
 
       <!-- Header -->

@@ -113,6 +113,7 @@ const handleClearEdit = () => {
     <!-- Panel Admin (modal) -->
     <AdminPanel
       v-if="mostrarAdminPanel"
+      :usuario-logueado="usuarioLogueado"
       @cerrar="mostrarAdminPanel = false"
     />
   </div>
