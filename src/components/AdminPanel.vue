@@ -20,7 +20,7 @@ onMounted(async () => {
   }
 
   try {
-    const res = await axios.get('http://localhost:8081/usuarios/listar');
+    const res = await axios.get('http://192.168.20.45:8081/usuarios/listar');
     if (res.data && res.data.length > 0) {
       usuarios.value = res.data;
       fuenteDatos.value = 'backend';

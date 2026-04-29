@@ -50,7 +50,7 @@ const iniciarSesion = async () => {
     }
     // Modo Registro
     try {
-      const response = await axios.post(`http://localhost:8081/usuarios/registro`, loginAuth.value);
+      const response = await axios.post(`http://192.168.20.45:8081/usuarios/registro`, loginAuth.value);
       guardarUsuarioLocal(loginAuth.value.usuario, loginAuth.value.password);
       Swal.fire({
         icon: 'success',
@@ -71,7 +71,7 @@ const iniciarSesion = async () => {
   } else {
     // Modo Login
     try {
-      const response = await axios.post(`http://localhost:8081/usuarios/login`, loginAuth.value);
+      const response = await axios.post(`http://192.168.20.45:8081/usuarios/login`, loginAuth.value);
       if (response.status === 200) {
         emit('login-success', loginAuth.value.usuario);
       }

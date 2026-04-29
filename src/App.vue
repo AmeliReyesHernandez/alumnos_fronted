@@ -22,7 +22,7 @@ const handleLoginSuccess = (usuario) => {
 
 const cargarAlumnos = async () => {
   try {
-    const response = await axios.get(`http://localhost:8081/alumnos/traer-alumnos`);
+    const response = await axios.get(`http://192.168.20.45:8081/alumnos/traer-alumnos`);
     alumnos.value = response.data;
   } catch (error) {
     console.error('Error al cargar alumnos', error);
