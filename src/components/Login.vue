@@ -77,7 +77,7 @@ const iniciarSesion = async () => {
       }
     } catch (error) {
       // Modo de prueba fallback por si el backend aún no se ha desplegado con la actualización
-      if (loginAuth.value.usuario === 'admin' && loginAuth.value.password === 'admin123') {
+      if (loginAuth.value.usuario === 'admin' && loginAuth.value.password === 'Admin123#') {
          guardarUsuarioLocal(loginAuth.value.usuario, loginAuth.value.password);
          emit('login-success', loginAuth.value.usuario);
          return;

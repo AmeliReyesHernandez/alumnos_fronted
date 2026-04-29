@@ -78,8 +78,7 @@ const handleClearEdit = () => {
         <button
           v-if="esAdmin"
           @click="mostrarAdminPanel = true"
-          class="btn btn-sm rounded-pill shadow-sm px-3"
-          style="background: linear-gradient(135deg, #1e3a8a, #3b82f6); color: white; border: none; font-size: 0.85rem;"
+          class="btn btn-primary btn-sm rounded-pill shadow-sm px-3"
         >
           <i class="bi bi-shield-lock-fill me-1"></i> Panel Admin
         </button>

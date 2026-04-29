@@ -7,7 +7,7 @@ import { saveAs } from 'file-saver';
  * Convierte una URL de imagen a base64 usando canvas.
  * Devuelve null si hay error (CORS u otro).
  */
-const urlToBase64 = (url) =>
+const urlToBase64 = (url, format = 'image/jpeg') =>
   new Promise((resolve) => {
     if (!url) return resolve(null);
     const img = new Image();
@@ -15,19 +15,23 @@ const urlToBase64 = (url) =>
     img.onload = () => {
       try {
         const canvas = document.createElement('canvas');
-        // Limitar tamaño para no inflar el PDF
-        const maxSize = 80;
-        const ratio = Math.min(maxSize / img.naturalWidth, maxSize / img.naturalHeight);
+        const isPng = format === 'image/png';
+        const maxSize = isPng ? 2000 : 80; 
+        const ratio = Math.min(maxSize / img.naturalWidth, maxSize / img.naturalHeight, 1);
         canvas.width  = img.naturalWidth  * ratio;
         canvas.height = img.naturalHeight * ratio;
         canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
-        resolve(canvas.toDataURL('image/jpeg', 0.75));
+        resolve({
+          data: canvas.toDataURL(format, isPng ? 1.0 : 0.75),
+          width: img.naturalWidth,
+          height: img.naturalHeight
+        });
       } catch {
         resolve(null);
       }
     };
     img.onerror = () => resolve(null);
-    // Forzar recarga sin caché para evitar bloqueos CORS
+    // Forzar recarga sin caché
     img.src = url.includes('?') ? url + '&_nc=' + Date.now() : url + '?_nc=' + Date.now();
   });
 
@@ -37,33 +41,45 @@ const urlToBase64 = (url) =>
 export async function exportarPDF(alumnos, titulo, nombreArchivo = 'alumnos') {
   const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
 
-  // === Encabezado ===
-  doc.setFillColor(30, 58, 138);
-  doc.rect(0, 0, 297, 22, 'F');
-  doc.setTextColor(255, 255, 255);
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(14);
-  doc.text('Sistema de Gestión Escolar', 14, 10);
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(10);
-  doc.text(titulo, 14, 17);
-  const fecha = new Date().toLocaleDateString('es-MX', { day: '2-digit', month: '2-digit', year: 'numeric' });
-  doc.text(`Generado: ${fecha}`, 283, 17, { align: 'right' });
+  // === Cargar imágenes de la hoja membretada ===
+  const headerObj = await urlToBase64('/encabezado.png', 'image/png');
+  const footerObj = await urlToBase64('/pie.png', 'image/png');
 
-  doc.setTextColor(30, 58, 138);
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(9);
-  doc.text(`Total de alumnos: ${alumnos.length}`, 14, 30);
+  const imgWidth = 267;
+  const marginX = 15;
+  const marginTop = 5; 
+  const marginBottom = 5;
 
-  // === Pre-cargar todas las imágenes en paralelo ===
-  const imagenes = await Promise.all(alumnos.map(a => urlToBase64(a.imagenURL)));
+  let headerHeight = 25; 
+  if (headerObj && headerObj.width) {
+    headerHeight = (headerObj.height / headerObj.width) * imgWidth;
+  }
+  
+  let footerHeight = 22; 
+  if (footerObj && footerObj.width) {
+    footerHeight = (footerObj.height / footerObj.width) * imgWidth;
+  }
 
-  // === Tabla con didDrawCell para insertar imágenes ===
-  const IMG_COL_IDX = 7; // índice de la columna "Imagen"
-  const ROW_H = 14;      // altura de fila en puntos
+  const drawBackground = () => {
+    if (headerObj && headerObj.data) {
+      doc.addImage(headerObj.data, 'PNG', marginX, marginTop, imgWidth, headerHeight);
+    }
+    if (footerObj && footerObj.data) {
+      doc.addImage(footerObj.data, 'PNG', marginX, 210 - marginBottom - footerHeight, imgWidth, footerHeight);
+    }
+  };
+
+  // === Pre-cargar todas las fotos ===
+  const imagenesObjs = await Promise.all(alumnos.map(a => urlToBase64(a.imagenURL)));
+
+  const IMG_COL_IDX = 7; 
+  const ROW_H = 11; 
+  
+  // Tabla inicia justo debajo de la imagen
+  const startYTable = marginTop + headerHeight + 5; 
 
   autoTable(doc, {
-    startY: 34,
+    startY: startYTable, 
     head: [['#', 'Nombre', 'Ap. Paterno', 'Ap. Materno', 'Email', 'Nº Control', 'Carrera', 'Foto', 'Teléfono']],
     body: alumnos.map((a, i) => [
       i + 1,
@@ -73,50 +89,72 @@ export async function exportarPDF(alumnos, titulo, nombreArchivo = 'alumnos') {
       a.email || '',
       a.numeroControl || '',
       a.carrera || '',
-      '',   // placeholder para la imagen
+      '',   
       `${a.lada || ''} ${a.telefono || ''}`.trim(),
     ]),
-    styles: { fontSize: 7.5, cellPadding: 2, overflow: 'linebreak', minCellHeight: ROW_H },
+    styles: { 
+      fontSize: 7.5, 
+      cellPadding: 1.5, 
+      overflow: 'linebreak', 
+      minCellHeight: ROW_H,
+      lineColor: [220, 220, 220],
+      lineWidth: 0.1,
+      textColor: [50, 50, 50],
+      valign: 'middle'
+    },
     headStyles: {
-      fillColor: [59, 130, 246],
+      fillColor: [0, 102, 204], // Azul profesional y bonito
       textColor: 255,
       fontStyle: 'bold',
       halign: 'center',
+      valign: 'middle'
     },
-    alternateRowStyles: { fillColor: [239, 246, 255] },
+    alternateRowStyles: { fillColor: [245, 249, 255] }, // Azul muy tenue y limpio
     columnStyles: {
       0: { halign: 'center', cellWidth: 8 },
-      5: { halign: 'center', cellWidth: 22 },
-      6: { cellWidth: 50 },
+      5: { halign: 'center', cellWidth: 20 },
+      6: { cellWidth: 48 },
       7: { halign: 'center', cellWidth: 14 },
-      8: { halign: 'center', cellWidth: 26 },
+      8: { halign: 'center', cellWidth: 24 },
     },
-    margin: { left: 14, right: 14 },
+    // Ajuste de margen inferior para no tocar el footer
+    margin: { top: startYTable, bottom: marginBottom + footerHeight + 2, left: marginX, right: marginX },
+    didDrawPage: function (data) {
+      // 1. Dibujar logos de encabezado y pie en la página actual
+      drawBackground();
+
+      // 2. Textos del título
+      doc.setTextColor(0, 102, 204); // Azul bonito
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(12);
+      doc.text(titulo, marginX, marginTop + headerHeight + 2);
+      
+      const fecha = new Date().toLocaleDateString('es-MX', { day: '2-digit', month: '2-digit', year: 'numeric' });
+      doc.setFontSize(8.5);
+      doc.setTextColor(100, 100, 100);
+      doc.setFont('helvetica', 'normal');
+      doc.text(`Generado: ${fecha} | Total: ${alumnos.length} alumnos`, 297 - marginX, marginTop + headerHeight + 2, { align: 'right' });
+
+      // 3. Número de página
+      doc.setFontSize(8);
+      doc.setTextColor(130);
+      doc.text(`Página ${doc.internal.getNumberOfPages()}`, 297 - marginX, 210 - marginBottom - 2, { align: 'right' });
+    },
     didDrawCell(data) {
-      // Insertar imagen en la columna correcta, solo en filas del body
       if (data.section === 'body' && data.column.index === IMG_COL_IDX) {
-        const b64 = imagenes[data.row.index];
-        if (b64) {
-          const padding = 1.5;
+        const imgObj = imagenesObjs[data.row.index];
+        if (imgObj && imgObj.data) {
+          const padding = 1;
           const size = Math.min(data.cell.width, data.cell.height) - padding * 2;
           const x = data.cell.x + (data.cell.width - size) / 2;
           const y = data.cell.y + (data.cell.height - size) / 2;
           try {
-            doc.addImage(b64, 'JPEG', x, y, size, size);
+            doc.addImage(imgObj.data, 'JPEG', x, y, size, size);
           } catch { /* ignorar si falla */ }
         }
       }
     },
   });
-
-  // Pie de página
-  const pageCount = doc.getNumberOfPages();
-  for (let i = 1; i <= pageCount; i++) {
-    doc.setPage(i);
-    doc.setFontSize(8);
-    doc.setTextColor(150);
-    doc.text(`Página ${i} de ${pageCount}`, 148, 205, { align: 'center' });
-  }
 
   doc.save(`${nombreArchivo}.pdf`);
 }
