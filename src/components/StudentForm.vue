@@ -133,7 +133,27 @@ const agregarAlumno = async () => {
       Swal.fire({
         icon: 'error',
         title: 'Número de Control Duplicado',
-        text: `Ya existe un alumno con el número de control ${nuevoAlumno.value.numeroControl}`
+        text: `Ya existe un alumno con el número de control ${nuevoAlumno.value.numeroControl}. Debe ser diferente.`
+      });
+      return;
+    }
+
+    const emailExistente = props.alumnos.find(a => a.email === nuevoAlumno.value.email);
+    if (emailExistente && (!editado.value || emailExistente.id !== nuevoAlumno.value.id)) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Correo Duplicado',
+        text: `Ya existe un alumno con el correo ${nuevoAlumno.value.email}. Intenta con al menos una letra o número diferente.`
+      });
+      return;
+    }
+
+    const telefonoExistente = props.alumnos.find(a => a.telefono === nuevoAlumno.value.telefono);
+    if (telefonoExistente && (!editado.value || telefonoExistente.id !== nuevoAlumno.value.id)) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Teléfono Duplicado',
+        text: `Ya existe un alumno con el teléfono ${nuevoAlumno.value.telefono}. Intenta con al menos un número diferente.`
       });
       return;
     }
