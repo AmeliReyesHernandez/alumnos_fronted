@@ -75,7 +75,7 @@ const alumnosAgrupados = computed(() => {
 
 const eliminarAlumnoPorId = async (id) => {
   try {
-    await axios.delete(`http://192.168.20.45:8081/alumnos/eliminar-alumnos/${id}`);
+    await axios.delete(`https://alumnos-backend-bw34.onrender.com/alumnos/eliminar-alumnos/${id}`);
     emit('refresh-list');
   } catch (errr) {
     console.error('Error al eliminar el alumno:', errr);

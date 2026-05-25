@@ -163,7 +163,7 @@ const agregarAlumno = async () => {
     }
 
     if (editado.value) {
-      await axios.put(`http://192.168.20.45:8081/alumnos/editar-alumnos/${nuevoAlumno.value.id}`, nuevoAlumno.value);
+      await axios.put(`https://alumnos-backend-bw34.onrender.com/alumnos/editar-alumnos/${nuevoAlumno.value.id}`, nuevoAlumno.value);
       Swal.fire({
         icon: 'success',
         title: 'Alumno actualizado correctamente',
@@ -172,7 +172,7 @@ const agregarAlumno = async () => {
       });
       editado.value = false;
     } else {
-      await axios.post(`http://192.168.20.45:8081/alumnos/insertar-alumnos`, nuevoAlumno.value);
+      await axios.post(`https://alumnos-backend-bw34.onrender.com/alumnos/insertar-alumnos`, nuevoAlumno.value);
       Swal.fire({
         icon: 'success',
         title: 'Alumno agregado correctamente',
